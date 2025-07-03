@@ -178,6 +178,16 @@ BEGIN {
 # --- The interpreter
 
 BEGIN { 
+    read_eval()
+}
+
+END {
+    if (profiling)
+        print_profiling()
+}
+
+# The interpreter loop.
+function read_eval(expr) {
     for (;;) {
         if (DRIVER in value && value[DRIVER] != NIL)
             apply(value[DRIVER])
@@ -190,9 +200,6 @@ BEGIN {
             unprotect()
         }
     }
-    
-    if (profiling)
-        print_profiling()
 }
 
 # All the interpretation routines have the precondition that their
