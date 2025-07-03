@@ -192,16 +192,13 @@ BEGIN {
     }
     
     if (profiling)
-        for (proc in call_count) {
-            printf("%5d ", call_count[proc])
-            print_expr(proc)
-        }
+        print_profiling()
 }
 
 # All the interpretation routines have the precondition that their
 # arguments are protected from garbage collection.
 
-function eval(expr,     old_frame_ptr)
+function eval(expr,     old_frame_ptr, proc)
 {
     if (is_atom(expr))                  #** speed
         if (is_symbol(expr)) {
@@ -496,6 +493,14 @@ function nreverse(list, reversed_head,          tail)
     if (list != NIL)
         error("Not a proper list - reverse!")
     return reversed_head
+}
+
+function print_profiling(proc) {
+    print ""
+    for (proc in call_count) {
+        printf("%5d ", call_count[proc])
+        print_expr(proc)
+    }
 }
 
 function error(reason)
