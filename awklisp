@@ -446,6 +446,8 @@ function read(          committed,      result)
                 unprotect()
             }
         }
+    } else if (token == ")") {          # Be nice and catch coding errors while reading the file.
+        error("Extraneous close paren")
     } else if (token == "'") {          # a quoted expression
         advance()
         return cons(QUOTE, cons(read(1), NIL))
