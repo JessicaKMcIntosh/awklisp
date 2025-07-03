@@ -222,12 +222,12 @@ function eval(expr,     old_frame_ptr, proc)
 
         eval_rands(cdr[expr])
         protect(proc = eval(car[expr]))
-        result = apply(proc)
+        global_result = apply(proc)
         unprotect()
 
         stack_ptr = frame_ptr
         frame_ptr = old_frame_ptr
-        return result
+        return global_result
     }
 
     if (op == QUOTE)    return car[cdr[expr]]
@@ -277,9 +277,9 @@ function apply(proc)
         ++call_count[proc]
     if (car[proc] == LAMBDA) {
         extend_env(car[cdr[proc]])
-        result = progn(cdr[cdr[proc]])  # result is global to save stack space
+        global_result = progn(cdr[cdr[proc]])  # global_result is global to save stack space
         unwind_env(car[cdr[proc]])
-        return result
+        return global_result
     }
     if (proc in num_params && num_params[proc] != stack_ptr - frame_ptr)
         error("Wrong number of arguments to " printname[cdr[proc]])
@@ -327,11 +327,11 @@ function do_apply(proc, args,           old_frame_ptr)
         stack[stack_ptr++] = car[args]
     if (args != NIL)
         error("Bad argument to APPLY: not a proper list")
-    result = apply(proc)
+    global_result = apply(proc)
 
     stack_ptr = frame_ptr
     frame_ptr = old_frame_ptr
-    return result
+    return global_result
 }
 
 function listify_args(          p, result)
