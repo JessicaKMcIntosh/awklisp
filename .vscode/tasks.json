@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "cmd.exe",
+                "args": [
+                    "/d", "/c"
+                ]
+            }
+        }
+    },
+    "options": {
+        "cwd": "${workspaceFolder}",
+    },
+    "tasks": [
+        {
+            "label": "Lint AWL Lisp",
+            "type": "shell",
+            "command": "gawk",
+            "args": [
+                "--lint=",
+                "-f",
+                "awklisp",
+                "startup"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "focus": true
+            },
+        },
+    ]
+}
