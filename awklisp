@@ -519,6 +519,7 @@ function print_profiling(proc) {
 
 function error(reason)
 {
-    print "ERROR: " reason >"/dev/stderr"
+    print "ERROR: " FILENAME ":" FNR " " reason >"/dev/stderr"
+    close("/dev/stderr")
     exit(1)
 }
