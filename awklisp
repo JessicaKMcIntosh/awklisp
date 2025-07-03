@@ -150,7 +150,7 @@ BEGIN {
     CADR        = def_prim("cadr", 1)
     CDDR        = def_prim("cddr", 1)
     CONS        = def_prim("cons", 2)
-    LIST        = def_prim("list", 0)
+    LIST        = def_prim("list", "")
     EVAL        = def_prim("eval", 1)
     APPLY       = def_prim("apply", 2)
     READ        = def_prim("read", 0)
@@ -173,7 +173,7 @@ BEGIN {
     NREV        = def_prim("reverse!", 1)
     GENSYM      = def_prim("gensym", 0)
     RANDOM      = def_prim("random", 1)
-    ERROR       = def_prim("error", 0)
+    ERROR       = def_prim("error", "")
 
     DRIVER      = string_to_symbol("top-level-driver")
 }
