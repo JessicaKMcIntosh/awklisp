@@ -325,7 +325,7 @@ function apply(proc)
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
     if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
-    if (proc == EXIT)   { exit(numeric_value(int(stack[frame_ptr]))) }
+    if (proc == EXIT)   exit(is_number(stack[frame_ptr]) ? numeric_value(stack[frame_ptr]) : stack[frame_ptr] == NIL ? 1 : 0)
     error("Unknown procedure type")
 }
 
