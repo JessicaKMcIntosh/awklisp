@@ -2,4 +2,5 @@
 
 BEGIN {
     heap_increment = 0
+    profiling = 0
 }

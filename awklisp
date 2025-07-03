@@ -6,10 +6,13 @@ BEGIN {
     a_number = 0
     pair_ptr = a_pair = 1
     symbol_ptr = a_symbol = 2
+    protected_ptr = 0
     
     type_name[a_number] = "number"
     type_name[a_pair] = "pair"
     type_name[a_symbol] = "symbol"
+
+    token = ""
 }
 
 function is(type, expr) 
@@ -356,6 +359,8 @@ function extend_env(vars,       p, temp)
     for (p = frame_ptr; vars != NIL; vars = cdr[vars]) {
         if (p == stack_ptr) 
             error("Too many arguments to procedure")
+        if (!(car[vars] in value) || !value[car[vars]])
+            value[car[vars]] = 0
         temp = value[car[vars]]
         value[car[vars]] = stack[p]
         stack[p] = temp
