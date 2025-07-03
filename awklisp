@@ -1,25 +1,28 @@
 #!/usr/bin/awk -f
 
-# --- Representation of Lisp data
+# ----~~~~++++====#### Representation of Lisp data ####====++++~~~~----
 
 BEGIN {
-    a_number = 0
-    pair_ptr = a_pair = 1
-    symbol_ptr = a_symbol = 2
-    protected_ptr = 0
-    
+    # Types and pointers.
+    a_number                 = 0
+    pair_ptr      = a_pair   = 1
+    symbol_ptr    = a_symbol = 2
+    protected_ptr            = 0
+
+    # Type names.
     type_name[a_number] = "number"
-    type_name[a_pair] = "pair"
+    type_name[a_pair]   = "pair"
     type_name[a_symbol] = "symbol"
 
+    # Used in parsing.
     token = ""
 }
 
-function is(type, expr) 
-{ 
-    if (expr % 4 != type) 
-        error("Expected a " type_name[type] ", not a " type_name[expr % 4]) 
-    return expr 
+function is(type, expr)
+{
+    if (expr % 4 != type)
+        error("Expected a " type_name[type] ", not a " type_name[expr % 4])
+    return expr
 }
 
 function is_number(expr)        { return expr % 4 == 0 }
@@ -30,9 +33,9 @@ function is_atom(expr)          { return expr % 4 != 1 }
 function make_number(n)         { return n * 4 }
 
 function numeric_value(expr)
-{ 
+{
     if (expr % 4 != 0) error("Not a number")
-    return expr / 4 
+    return expr / 4
 }
 
 # Return the symbol :string names.
@@ -57,7 +60,7 @@ function def_prim(name, nparams,        sym)
     return value[sym]
 }
 
-# --- Garbage collection
+# ----~~~~++++====#### Garbage collection ####====++++~~~~----
 
 # Make a new pair.
 function cons(the_car, the_cdr)
@@ -74,8 +77,8 @@ function cons(the_car, the_cdr)
     return pair_ptr - 4
 }
 
-function protect(object)        { protected[++protected_ptr] = object }
-function unprotect()            { --protected_ptr }
+function protect(object) { protected[++protected_ptr] = object }
+function unprotect()     { --protected_ptr }
 
 function mark(object)
 {
@@ -88,7 +91,7 @@ function mark(object)
 
 function gc(the_car, the_cdr,   p, i)
 {
-    if (loud_gc) 
+    if (loud_gc)
         printf("\nGC...") >"/dev/stderr"
     mark(the_car); mark(the_cdr)
     for (p = 1; p <= protected_ptr; ++p)
@@ -115,11 +118,11 @@ function gc(the_car, the_cdr,   p, i)
     }
 }
 
-# --- Set up
+# ----~~~~++++====#### Set up ####====++++~~~~----
 
-BEGIN { 
+BEGIN {
     srand()
-    
+
     frame_ptr = stack_ptr = 0
 
     if (!heap_increment) heap_increment = 1500
@@ -179,9 +182,9 @@ BEGIN {
     DRIVER      = string_to_symbol("top-level-driver")
 }
 
-# --- The interpreter
+# ----~~~~++++====#### The interpreter ####====++++~~~~----
 
-BEGIN { 
+BEGIN {
     read_eval()
 }
 
@@ -257,7 +260,7 @@ function eval(expr,     old_frame_ptr, proc)
         value[car[cdr[expr]]] = eval(car[cdr[cdr[expr]]])
         return car[cdr[expr]]
     }
-    
+
     error("BUG: Unknown special form")
 }
 
@@ -280,7 +283,7 @@ function eval_rands(rands)
 # (in that order).
 function apply(proc)
 {
-    if (profiling) 
+    if (profiling)
         ++call_count[proc]
     if ((proc in car) && (car[proc] == LAMBDA)) {
         extend_env(car[cdr[proc]])
@@ -350,19 +353,20 @@ function listify_args(          p, result)
     return result
 }
 
-# --- The environment
+# ----~~~~++++====#### The environment ####====++++~~~~----
+
 # The current environment is represented by the set of values
 # value[sym] where sym is a symbol.  extend_env(vars) adds a new
 # set of bindings for vars, saving the old values; unwind_env(vars)
 # restores those old values.  The new value for the nth member of
-# vars is frame_ptr[n]; coincidentally, that's also where we 
-# store away the old value, since that stack frame's not needed 
+# vars is frame_ptr[n]; coincidentally, that's also where we
+# store away the old value, since that stack frame's not needed
 # for anything else after the extend_env() call.
 
 function extend_env(vars,       p, temp)
 {
     for (p = frame_ptr; vars != NIL; vars = cdr[vars]) {
-        if (p == stack_ptr) 
+        if (p == stack_ptr)
             error("Too many arguments to procedure")
         if (!(car[vars] in value) || !value[car[vars]])
             value[car[vars]] = 0
@@ -371,7 +375,7 @@ function extend_env(vars,       p, temp)
         stack[p] = temp
         ++p
     }
-    if (p != stack_ptr) 
+    if (p != stack_ptr)
         error("Not enough arguments to procedure")
 }
 
@@ -386,7 +390,7 @@ function unwind_env(vars,       p)
     }
 }
 
-# --- Output
+# ----~~~~++++====#### Output ####====++++~~~~----
 
 function print_expr(expr)
 {
@@ -419,7 +423,7 @@ function write_expr(expr)
     }
 }
 
-# --- Input
+# ----~~~~++++====#### Input ####====++++~~~~----
 
 function read(committed,      result)
 {
@@ -498,7 +502,7 @@ function advance()
         error("Lexical error starting at " line)
 }
 
-# --- Miscellany
+# ----~~~~++++====#### Miscellany ####====++++~~~~----
 
 # Destructively reverse :list and append :reversed_head.
 function nreverse(list, reversed_head,          tail)
