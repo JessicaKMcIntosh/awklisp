@@ -278,7 +278,7 @@ function apply(proc)
 {
     if (profiling) 
         ++call_count[proc]
-    if (car[proc] == LAMBDA) {
+    if ((proc in car) && (car[proc] == LAMBDA)) {
         extend_env(car[cdr[proc]])
         global_result = progn(cdr[cdr[proc]])  # global_result is global to save stack space
         unwind_env(car[cdr[proc]])
