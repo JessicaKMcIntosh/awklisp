@@ -195,7 +195,7 @@ function read_eval(expr) {
         if (DRIVER in value && value[DRIVER] != NIL)
             apply(value[DRIVER])
         else {
-            expr = read()
+            expr = read(0)
             if (expr == THE_EOF_OBJECT)
                 break;
             protect(expr)
@@ -314,7 +314,7 @@ function apply(proc)
     if (proc == NREV)   return nreverse(stack[frame_ptr], NIL)
     if (proc == WRITE)  { write_expr(stack[frame_ptr]); printf(" "); return NIL }
     if (proc == NEWLINE){ printf("\n"); return NIL }
-    if (proc == READ)   return read()
+    if (proc == READ)   return read(0)
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
     if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
@@ -416,7 +416,7 @@ function write_expr(expr)
 
 # --- Input
 
-function read(          committed,      result)
+function read(committed,      result)
 {
     skip_blanks()
     if (token == eof)
