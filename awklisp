@@ -174,6 +174,7 @@ BEGIN {
     GENSYM      = def_prim("gensym", 0)
     RANDOM      = def_prim("random", 1)
     ERROR       = def_prim("error", "")
+    EXIT        = def_prim("exit", 1)
 
     DRIVER      = string_to_symbol("top-level-driver")
 }
@@ -318,6 +319,7 @@ function apply(proc)
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
     if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
+    if (proc == EXIT)   { exit(numeric_value(int(stack[frame_ptr]))) }
     error("Unknown procedure type")
 }
 
