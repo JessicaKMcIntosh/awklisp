@@ -21,6 +21,8 @@
             "args": [
                 "--lint=",
                 "-f",
+                "lint.awk",
+                "-f",
                 "awklisp",
                 "startup"
             ],

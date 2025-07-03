@@ -119,7 +119,7 @@ BEGIN {
     
     frame_ptr = stack_ptr = 0
 
-    if (heap_increment == "") heap_increment = 1500
+    if (!heap_increment) heap_increment = 1500
     pair_limit = a_pair + 4 * heap_increment
 
     NIL         = string_to_symbol("nil")
