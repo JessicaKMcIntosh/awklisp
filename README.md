@@ -1,3 +1,22 @@
+# awklisp: a Lisp interpreter in awk
+
+This is a fork just to play around with this fun toy.
+
+My intention is to add gawk specific extensions to make the code cleaner and hopefully improve performance.
+
+I have some other ideas as well.
+
+* Add output for monitoring performance.
+  Can't tell if something is an improvement if you can't measure it.
+* Add a string data type and string routines.
+* C style for loops would be an interesting addition.
+  startup has a for-each loop.
+* More math primitives.
+* Include other files. So startup and other libraries could be loaded on demand.
+* Adding break and continue for loops would be an interesting challenge.
+
+## Original readme
+
 See the Manual file for documentation.
 
 This release also has a Perl version, perlisp, contributed by the Perl
@@ -11,7 +30,6 @@ Avenger, who writes:
 
 The awk code is still essentially the code posted to alt.sources (May
 31, 1994), but with a garbage collector added.
-
 
 Copyright (c) 1994, 2001 by Darius Bacon.
 
