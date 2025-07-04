@@ -25,7 +25,7 @@
 (define memq (lambda (x lst) (member:test eq? x lst)))
 (define member (lambda (x lst) (member:test equal? x lst)))
 
-(define member:test 
+(define member:test
   (lambda (=? x lst)
     (while (and lst (not (=? x (car lst))))
       (set! lst (cdr lst)))
@@ -45,12 +45,12 @@
     (cond
       ((null? exp) '())
       ((atom? exp)
-       (let ((binding (assq exp a-list)))
-         (if binding (cdr binding) exp)))
+        (let ((binding (assq exp a-list)))
+          (if binding (cdr binding) exp)))
       (else
         (cons (sublis a-list (car exp))
               (sublis a-list (cdr exp)))))))
-    
+
 (define remove
   (lambda (key lst)
     (if (null? lst)
@@ -62,8 +62,8 @@
 
 (define list-ref
   (lambda (lst n)
-    (if (null? lst) 
+    (if (null? lst)
         '()
-        (if (= n 0) 
+        (if (= n 0)
             (car lst)
             (list-ref (cdr lst) (- n 1))))))

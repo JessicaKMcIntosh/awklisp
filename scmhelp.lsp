@@ -43,6 +43,6 @@
 
 (define primitive?
   (lambda (object)
-    (and (pair? object)
-         (eq? (car object) '%prim))))
+    (and  (pair? object)
+          (eq? (car object) '%prim))))
 

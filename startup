@@ -29,11 +29,11 @@
 (define length
   (lambda (lst)
     ((lambda (n)
-       (while lst
-         (set! n (+ n 1))
-         (set! lst (cdr lst)))
-       n)
-     0)))
+        (while lst
+          (set! n (+ n 1))
+          (set! lst (cdr lst)))
+        n)
+      0)))
 
 (define append
   (lambda (L1 L2)
@@ -45,11 +45,11 @@
 (define map
   (lambda (proc lst)
     ((lambda (result)
-       (while lst
-         (set! result (cons (proc (car lst)) result))
-         (set! lst (cdr lst)))
-       (reverse! result))
-     '())))
+        (while lst
+          (set! result (cons (proc (car lst)) result))
+          (set! lst (cdr lst)))
+        (reverse! result))
+      '())))
 
 (define for-each
   (lambda (proc lst)
@@ -96,15 +96,15 @@
 (define-macro 'or
   (lambda (args)
     (if (null? args)
-        nil
-        (if (null? (cdr args))
-            (car args)
-            (list
-              ((lambda (test-var)
-                (list 'lambda (list test-var)
-                  (list 'if test-var test-var (cons 'or (cdr args)))))
-               (gensym))
-              (car args))))))
+      nil
+      (if (null? (cdr args))
+          (car args)
+          (list
+            ((lambda (test-var)
+              (list 'lambda (list test-var)
+                (list 'if test-var test-var (cons 'or (cdr args)))))
+              (gensym))
+            (car args))))))
 
 (define-macro 'let
   (lambda (args)
@@ -134,8 +134,8 @@
 (define top-level-driver
   (lambda ()
     (write '>)
-    ((lambda (exp)
-       (if (eq? the-eof-object exp)
-           (set! top-level-driver nil)
-           (print (eval (macroexpand exp)))))
-     (read))))
+    ( (lambda (exp)
+        (if (eq? the-eof-object exp)
+            (set! top-level-driver nil)
+            (print (eval (macroexpand exp)))))
+      (read))))

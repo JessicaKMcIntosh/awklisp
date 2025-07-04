@@ -9,8 +9,8 @@
   (lambda (f)
     (let ((future
             (lambda (future)
-              (f (lambda (arg) 
-                   ((future future) arg))))))
+              (f (lambda (arg)
+                ((future future) arg))))))
       (future future))))
 
 ((Y (lambda (factorial)
@@ -18,4 +18,4 @@
         (if (= n 0)
             1
             (* n (factorial (- n 1)))))))
- 3)
+      3)

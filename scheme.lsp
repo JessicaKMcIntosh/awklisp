@@ -4,9 +4,9 @@
 (define read-eval-print-loop
   (lambda ()
     (let ((exp '*))
-      (while (begin 
-               (write '>) 
-               (not (eq? the-eof-object (set! exp (read)))))
+      (while (begin
+              (write '>)
+              (not (eq? the-eof-object (set! exp (read)))))
         (print (eval-exp (macroexpand exp) init-env))))))
 
 (define eval-exp
@@ -30,7 +30,7 @@
 
 (put 'lambda 'evaluator make-closure)
 
-(put 'if 'evaluator 
+(put 'if 'evaluator
   (lambda (exp env)
     (if (eval-exp (test-exp exp) env)
         (eval-exp (then-exp exp) env)

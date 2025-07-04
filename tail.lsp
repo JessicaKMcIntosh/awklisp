@@ -16,8 +16,8 @@
 (define read-eval-print-loop
   (lambda ()
     (while (begin
-             (write '>)
-             (not (eq? the-eof-object (set! exp (read)))))
+            (write '>)
+            (not (eq? the-eof-object (set! exp (read)))))
       (set! exp (macroexpand exp))
       (set! env init-env)
       (set! cont (lambda () 'halt))
@@ -42,7 +42,7 @@
   (lambda ()
     (if (atom? exp)
         (return
-          (if (symbol? exp) 
+          (if (symbol? exp)
               (lookup-variable exp env)
               exp))
         (let ((handler (get (car exp) 'evaluator)))
@@ -87,14 +87,14 @@
     (goto rands-loop)))
 
 (put 'quote 'evaluator
-  (lambda () 
+  (lambda ()
     (return (cadr exp))))
 
-(put 'lambda 'evaluator 
+(put 'lambda 'evaluator
   (lambda ()
     (return (make-closure exp env))))
 
-(put 'if 'evaluator 
+(put 'if 'evaluator
   (lambda ()
     (push cont)
     (push env)
@@ -135,7 +135,7 @@
         (return (apply proc args))
         (begin
           (set! exp (closure-body proc))
-          (set! env 
+          (set! env
             (extend-env (closure-formals proc) args (closure-env proc)))
           (goto eval-exp)))))
 
