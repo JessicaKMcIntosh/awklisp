@@ -30,6 +30,8 @@ function is_pair(expr)          { return expr % 4 == 1 }
 function is_symbol(expr)        { return expr % 4 == 2 }
 function is_atom(expr)          { return expr % 4 != 1 }
 
+function type_of(expr)          { return type_name[expr % 4] }
+
 function make_number(n)         { return n * 4 }
 
 function numeric_value(expr)
