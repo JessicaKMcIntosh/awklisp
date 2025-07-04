@@ -101,7 +101,7 @@ function gc(the_car, the_cdr,   p, i)
     for (p in value)
         mark(value[p])
     for (p in property) {
-        i = index(SUBSEP, p)
+        i = index(p, SUBSEP)
         mark(substr(p, 1, i-1))
         mark(substr(p, i+1))
         mark(property[p])
