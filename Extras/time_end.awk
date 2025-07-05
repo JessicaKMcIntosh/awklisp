@@ -1,3 +1,7 @@
+# Stop a timer when the script finishes executing.
+# Prints a report with as much resolution as AWK can manage.
+# See time_star.awk for the second half.
+
 END {
     _time_end = systime()
 
