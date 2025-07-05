@@ -9,6 +9,8 @@ BEGIN {
     # Give these arrays a type since it might not get used.
     delete car
     delete cdr
+    delete module_func
+    delete modules
     delete printname
     delete property
     delete stack

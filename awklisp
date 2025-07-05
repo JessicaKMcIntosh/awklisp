@@ -180,7 +180,8 @@ BEGIN {
     GENSYM      = def_prim("gensym", 0)
     RANDOM      = def_prim("random", 1)
     ERROR       = def_prim("error", "")
-    EXIT        = def_prim("exit", 1)
+
+    register_modules()
 
     DRIVER      = string_to_symbol("top-level-driver")
 }
@@ -331,7 +332,12 @@ function apply(proc)
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
     if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
-    if (proc == EXIT)   exit(is_number(stack[frame_ptr]) ? numeric_value(stack[frame_ptr]) : stack[frame_ptr] == NIL ? 1 : 0)
+
+    if (proc in module_func) {
+        proc = module_func[proc]
+        return @proc()
+    }
+
     error("Unknown procedure type")
 }
 
@@ -507,6 +513,16 @@ function advance()
         token = ""      # this kludge permits interactive use
     else
         error("Lexical error starting at " line)
+}
+
+# ----~~~~++++====#### Modules ####====++++~~~~----
+
+function register_modules(name) {
+    for (name in modules) {
+        printf("Registering the module: %s\n", name)
+        name = modules[name]
+        @name()
+    }
 }
 
 # ----~~~~++++====#### Miscellany ####====++++~~~~----
