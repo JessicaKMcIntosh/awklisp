@@ -15,6 +15,10 @@ BEGIN {
     delete property
     delete stack
     delete value
+
+    # Stop the warning: close: `/dev/stderr' is not an open file, pipe or co-process
+    printf("") >"/dev/stderr"
+
 }
 
 END {
