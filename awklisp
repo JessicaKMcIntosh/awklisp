@@ -13,9 +13,6 @@ BEGIN {
     type_name[a_number] = "number"
     type_name[a_pair]   = "pair"
     type_name[a_symbol] = "symbol"
-
-    # Used in parsing.
-    token = ""
 }
 
 function is(type, expr)
@@ -126,6 +123,10 @@ BEGIN {
     srand()
 
     frame_ptr = stack_ptr = 0
+    gensym_counter = 0
+
+    # Prevent unused variable errors.
+    token = ""
 
     if (!heap_increment) heap_increment = 1500
     pair_limit = a_pair + 4 * heap_increment
@@ -286,7 +287,10 @@ function eval_rands(rands)
 function apply(proc)
 {
     if (profiling)
-        ++call_count[proc]
+        if (proc in call_count)
+            ++call_count[proc]
+        else
+            call_count[proc] = 1
     if ((proc in car) && (car[proc] == LAMBDA)) {
         extend_env(car[cdr[proc]])
         global_result = progn(cdr[cdr[proc]])  # global_result is global to save stack space
@@ -294,7 +298,7 @@ function apply(proc)
         return global_result
     }
     if (proc in num_params && num_params[proc] != stack_ptr - frame_ptr)
-        error("Wrong number of arguments to " printname[cdr[proc]])
+        error("Wrong number of arguments to " (proc in cdr ? printname[cdr[proc]] : printname[proc]))
 
     if (proc == CAR)    return car[is(a_pair, stack[frame_ptr])]
     if (proc == CDR)    return cdr[is(a_pair, stack[frame_ptr])]
@@ -493,7 +497,8 @@ function advance()
         match(line, "^[ \\t]+")) {
         token = substr(line, RSTART, RLENGTH)
         # This was causing errors reading past the end of the string.
-        if (RSTART == 1 && RLENGTH == length(line)) {
+        # The quote is to prevent not a string errors.
+        if (RSTART == 1 && RLENGTH == length(line "")) {
             line = ""
         } else {
             line = substr(line, RLENGTH+1)
@@ -522,6 +527,7 @@ function nreverse(list, reversed_head,          tail)
 
 function print_profiling(proc) {
     print ""
+    print "Profiling:"
     for (proc in call_count) {
         printf("%5d ", call_count[proc])
         print_expr(proc)
@@ -533,4 +539,12 @@ function error(reason)
     print "ERROR: " FILENAME ":" FNR " " reason >"/dev/stderr"
     close("/dev/stderr")
     exit(1)
+}
+
+END {
+    if (loud_gc) {
+        # Stop the warning: close: `/dev/stderr' is not an open file, pipe or co-process
+        printf("") >"/dev/stderr"
+        close("/dev/stderr")
+    }
 }
