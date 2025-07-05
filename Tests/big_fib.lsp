@@ -22,4 +22,3 @@
 (say '(This will take a while))
 (write (fib 35))
 (newline)
-(exit 0)
