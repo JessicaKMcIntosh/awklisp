@@ -8,15 +8,15 @@ REM Local variables please.
 SETLOCAL
 
 REM The path to this batch file.
-SET AWK_LISP_DIR=%~dp0
+SET AWKLispDir=%~dp0
 
 REM Add the AWK Lisp paths to AWKPATH.
 IF DEFINED AWKPATH (
-    ECHO. %AWKPATH% | FINDSTR /C:%AWK_LISP_DIR% > NUL || (
-    SET AWKPATH=%AWK_LISP_DIR%;%AWK_LISP_DIR%Modules;%AWK_LISP_DIR%Extras;%AWKPATH%
+    ECHO. %AWKPATH% | FINDSTR /C:%AWKLispDir% > NUL || (
+    SET AWKPATH=%AWKLispDir%;%AWKLispDir%Modules;%AWKLispDir%Extras;%AWKPATH%
     )
 ) else (
-    SET AWKPATH=%AWK_LISP_DIR%;%AWK_LISP_DIR%Modules;%AWK_LISP_DIR%Extras
+    SET AWKPATH=%AWKLispDir%;%AWKLispDir%Modules;%AWKLispDir%Extras
 )
 
 REM ----~~~~++++====#### Settings ####====++++~~~~----
@@ -28,7 +28,7 @@ REM The Gawk program file.
 SET GawkProgram=gawk.exe
 
 REM The AWK Lisp file.
-SET AWKLispFile=%AWK_LISP_DIR%awklisp
+SET AWKLispFile=%AWKLispDir%awklisp
 
 REM Extra debugging output.
 SET DebugEnabled=no
@@ -48,6 +48,9 @@ SET ObjectsEnabled=no
 REM Reduce AWK Lisp output.
 SET QuietEnabled=no
 
+REM Load the file startup.
+SET StartupEnabled=no
+
 REM The command to execute AWK Lisp.
 SET GawkCmd=
 
@@ -56,6 +59,7 @@ SET GawkArgs=
 
 REM       -----===== Process Command Line ======------
 
+ECHO ProcessArgs
 CALL :DebugMsg Processing command line options...
 :ProcessArgs
     IF /I "%1"==""        GOTO :FinishedArgs
@@ -73,6 +77,8 @@ CALL :DebugMsg Processing command line options...
     IF /I "%1"=="-o"      GOTO :SetObjects
     IF /I "%1"=="/q"      GOTO :SetQuiet
     IF /I "%1"=="-q"      GOTO :SetQuiet
+    IF /I "%1"=="/s"      GOTO :SetStartup
+    IF /I "%1"=="-s"      GOTO :SetStartup
     IF /I "%1"=="help"    GOTO :ShowHelp
     IF /I "%1"=="/?"      GOTO :ShowHelp
     IF /I "%1"=="/h"      GOTO :ShowHelp
@@ -84,9 +90,19 @@ CALL :DebugMsg Processing command line options...
 :FinishedArgs
 
 REM Make sure Gawk is installed.
+ECHO CheckGawk
 CALL :DebugMsg Checking the Gawk program...
 CALL :CheckGawk
 IF %ERRORLEVEL% NEQ 0 GOTO :ExitScript
+
+REM Check if incompatible options are set.
+IF %LintEnabled% == yes (
+    IF %QuietEnabled% == yes (
+        ECHO Quiet /q and Lint /l are not compatible.
+        ECHO Lint /l will always disable Quiet /q.
+        GOTO :ExitScript
+    )
+)
 
 REM Add remaining command line options.
 :AddArgs
@@ -104,10 +120,57 @@ GOTO :ExitScript
     ECHO Invalid command line option: %1
     GOTO :ExitScript
 
+:SetDebug
+    SET DebugEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetGawk
+    IF "%~2"=="" GOTO :ERRORGawk
+    SET GawkProgram=%2
+    SHIFT
+    SHIFT
+    GOTO :ProcessArgs
+
+:ERRORGawk
+    ECHO Option %1 requires the Gawk program.
+    GOTO :Gawk
+
+:SetInteractive
+    SET InteractiveEnabled=no
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetLint
+    SET LintEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetModules
+    SET ModulesEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetObjects
+    SET ObjectsEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetQuiet
+    SET QuietEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetStartup
+    SET StartupEnabled=yes
+    SHIFT
+    GOTO :ProcessArgs
+
 REM ----~~~~++++====#### Run AWK Lisp ####====++++~~~~----
 
 REM Run AWK Lisp.
 :RunAWKLisp
+    ECHO Running AWK Lisp...
     CALL :DebugMsg Running AWK Lisp...
 
     REM Setup the command based on the options.
@@ -117,9 +180,11 @@ REM Run AWK Lisp.
 
     IF %InteractiveEnabled% == yes (
         %GawkCmd% -
+        CALL :DebugMsg Exit code: %ERRORLEVEL%
         EXIT /B
     ) else (
         %GawkCmd% < NUL
+        CALL :DebugMsg Exit code: %ERRORLEVEL%
         EXIT /B
     )
     EXIT /B
@@ -152,8 +217,29 @@ REM Build the Gawk command to run AWK Lisp
     REM Add the AWK Lisp program.
     SET GawkCmd=%GawkCmd% -f %AWKLispFile%
 
+    REM Load the file startup.
+    IF %StartupEnabled% == yes (
+        SET GawkCmd=%GawkCmd% startup
+    )
+
     REM Finally add any command line options.
     SET GawkCmd=%GawkCmd%%GawkArgs%
+    EXIT /B
+
+
+REM Check if the Gawk program exists.
+:CheckGawk
+    %GawkProgram% --version > NUL 2>&1
+    IF %ERRORLEVEL% NEQ 0 (
+        ECHO Gawk is not in the current path. Aborting!
+        ECHO Gawk Command: %GawkProgram%
+        EXIT /B 1
+    )
+    EXIT /B
+
+REM Print the message if debug is enabled.
+:DebugMsg
+    IF %DebugEnabled% == yes ECHO DEBUG: %*
     EXIT /B
 
 REM       -----===== Help Text ======------
@@ -173,69 +259,12 @@ REM Show some help text.
     ECHO /n or -n - Non-Interactive mode.
     ECHO /o or -o - Display all objects after exit.
     ECHO /q or -q - Quite, reduced output from AWK Lisp.
+    ECHO /s or -s - Load the file "startup".
     ECHO.
     ECHO (Case of options does not matter.)
     GOTO :ExitScript
 
 REM ----~~~~++++====#### Helper Functions ####====++++~~~~----
-
-REM Enable debug output.
-:SetDebug
-    SET DebugEnabled=yes
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Set the Gawk binary.
-:SetGawk
-    IF "%~2"=="" GOTO :ERRORGawk
-    SET GawkProgram=%2
-    SHIFT
-    SHIFT
-    GOTO :ProcessArgs
-
-:ERRORGawk
-    ECHO Option %1 requires the Gawk program.
-    GOTO :Gawk
-
-REM Disable interactive mode.
-:SetInteractive
-    SET InteractiveEnabled=no
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Enable Lint mode.
-:SetLint
-    SET LintEnabled=yes
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Load all modules.
-:SetModules
-    SET ModulesEnabled=yes
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Print all objects.
-:SetObjects
-    SET ObjectsEnabled=yes
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Quiet mode.
-:SetQuiet
-    SET QuietEnabled=yes
-    SHIFT
-    GOTO :ProcessArgs
-
-REM Check if the Gawk program exists.
-:CheckGawk
-    %GawkProgram% --version > NUL 2>&1
-    IF %ERRORLEVEL% NEQ 0 (
-        ECHO Gawk is not in the current path. Aborting!
-        ECHO Gawk Command: %GawkProgram%
-        EXIT /B 1
-    )
-    EXIT /B
 
 REM Print hopefully useful debug information.
 :PrintDebug
@@ -244,16 +273,11 @@ REM Print hopefully useful debug information.
     ECHO   Modules:     %ModulesEnabled%
     ECHO   Interactive: %InteractiveEnabled%
     ECHO   Quiet:       %QuietEnabled%
-    ECHO Program: %GawkProgram%
-    ECHO Args: %GawkArgs%
-    ECHO Gawk Command:
-    ECHO %GawkCmd%
+    ECHO   Startup:     %StartupEnabled%
+    ECHO DEBUG Program: %GawkProgram%
+    ECHO DEBUG Args:    %GawkArgs%
+    ECHO DEBUG Command: %GawkCmd%
     ECHO.
-    EXIT /B
-
-REM Print the message if debug is enabled.
-:DebugMsg
-    IF %DebugEnabled% == yes ECHO DEBUG: %*
     EXIT /B
 
 ECHO You should not see this message.
