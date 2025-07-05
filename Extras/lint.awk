@@ -24,4 +24,9 @@ BEGIN {
 END {
     # Stop errors for not calling this.
     type_of(0)
+
+    # Stop more errors with /dev/stderr.
+    if (!loud_gc) {
+        close("/dev/stderr")
+    }
 }
