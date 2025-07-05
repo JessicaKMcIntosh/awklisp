@@ -16,8 +16,8 @@ function module_type_register() {
     module_func[def_prim("get_type", 1)] = "module_type_func"
 }
 
-function module_type_func(value) {
-    value = type_of(stack[frame_ptr])
-    value = toupper(substr(value, 1, 1)) substr(value, 2)
-    return string_to_symbol(value)
+function module_type_func(variable) {
+    variable = type_of(stack[frame_ptr])
+    variable = toupper(substr(variable, 1, 1)) substr(variable, 2)
+    return string_to_symbol(variable)
 }
