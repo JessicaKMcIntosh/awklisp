@@ -26,6 +26,44 @@
                 "awklisp",
                 "startup"
             ],
+            "windows": {
+                "command": "awklisp.bat",
+                "args": [
+                    "-d",
+                    "-m",
+                    "startup"
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "focus": true
+            },
+        },
+        {
+            "label": "Run AWL Lisp",
+            "type": "shell",
+            "command": "gawk",
+            "args": [
+                "-f",
+                "Modules/exit.awk",
+                "-f",
+                "Modules/type.awk",
+                "-f",
+                "awklisp",
+                "startup",
+                "-"
+            ],
+            "windows": {
+                "command": "awklisp.bat",
+                "args": [
+                    "-d",
+                    "-l",
+                    "-n"
+                ]
+            },
             "group": {
                 "kind": "test",
                 "isDefault": true
