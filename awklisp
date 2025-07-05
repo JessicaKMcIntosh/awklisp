@@ -128,6 +128,11 @@ BEGIN {
     # Prevent unused variable errors.
     token = ""
 
+    # Including files.
+    include_file = ""           # The current file being included.
+    delete include_file_stack   # For recursive includes.
+    include_file_stack_ptr  = 0
+
     if (!heap_increment) heap_increment = 1500
     pair_limit = a_pair + 4 * heap_increment
 
@@ -491,15 +496,32 @@ function skip_blanks()
 
 function advance()
 {
-    if (token == eof) return eof
-    if (token == "") {
-        if (getline line <= 0) {
-            token = eof
-            return
+    if (include_file != "") {
+        if (token == eof) {
+            pop_include()
+            return advance()
+        }
+        if (token == "") {
+            if (getline line < include_file <= 0) {
+                pop_include()
+                return advance()
+            }
+        }
+    } else {
+        if (token == eof) return eof
+        if (token == "") {
+            if (getline line <= 0) {
+                token = eof
+                return
+            }
         }
     }
-    if (match(line, "^[()'.]") ||
-        match(line, "^[_A-Za-z0-9=!@$%&*<>?+\\-*/:]+") ||
+    if (match(tolower(line ""), /^@include\s+/)) {
+        line = substr(line, RLENGTH + 1)
+        push_include()
+        return advance()
+    } else if (match(line, "^[()'.]") ||
+        match(line, "^[_A-Za-z0-9=!@$%&*<>?+\\-*/:.]+") ||
         match(line, "^[ \\t]+")) {
         token = substr(line, RSTART, RLENGTH)
         # This was causing errors reading past the end of the string.
@@ -513,6 +535,42 @@ function advance()
         token = ""      # this kludge permits interactive use
     else
         error("Lexical error starting at " line)
+}
+
+# Read in an included file.
+function push_include(    pos) {
+        if (line == "")
+                error("Missing include file name.")
+        if (substr(line, 1, 1) == "\"") {
+            # Quoted file name.
+            line = substr(line, 2)
+            pos = index(line, "\"")
+            if (pos == 0)
+                error("Syntax error. Missing closing double quote.")
+            token = substr(line, 1, pos - 1)
+            line = substr(line, pos + 1)
+            if (token == "")
+                error("Missing include file name.")
+        } else {
+            # Bare file name.
+            match(line, "^[a-zA-Z0-9][a-zA-Z0-9.]+")
+            if (RLENGTH == 0)
+                error("Missing include file name.")
+            token = substr(line, 1, RLENGTH)
+            line = substr(line, RLENGTH + 1)
+        }
+        # Set the file to include and addit to the stack.
+        include_file = include_file_stack[++include_file_stack_ptr] = token
+        token = ""
+}
+
+# Drop down the include stack.
+function pop_include() {
+    if (include_file_stack_ptr == 0)
+        error("BUG: Attempting to pop the include stack while empty.")
+    include_file = ""
+    if (--include_file_stack_ptr > 0)
+        include_file = include_file_stack[include_file_stack_ptr]
 }
 
 # ----~~~~++++====#### Modules ####====++++~~~~----
