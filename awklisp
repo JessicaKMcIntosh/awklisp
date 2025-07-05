@@ -577,7 +577,8 @@ function pop_include() {
 
 function register_modules(name) {
     for (name in modules) {
-        printf("Registering the module: %s\n", name)
+        if (!quiet)
+            printf("Registering module: %s\n", name)
         name = modules[name]
         @name()
     }
