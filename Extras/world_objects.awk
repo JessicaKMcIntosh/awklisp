@@ -1,20 +1,21 @@
 # Print out everything in values[] and properties[] as a pretty little tree.
+# The goal is for the output to be valid AWK Lisp code.
 
 # Usage:
-# Include this file on the command line: -f Extras\world_tree.awk
+# Include this file on the command line: -f Extras\world_objects.awk
 
 # Example:
-# gawk -f awklisp -f Extras\world_tree.awk startup
+# gawk -f awklisp -f Extras\world_objects.awk startup
 
 END {
-    printf("\n\nWorld Tree:\n")
-    world_tree()
+    printf("\n\nObjects:\n")
+    world_objects()
 
     # Make lint happy.
     cmp_str_printname(0, 0, 0, 0)
 }
 
-function world_tree(    expr, name) {
+function world_objects(    expr, name) {
     # Sort by the printname when possible.
     PROCINFO["sorted_in"] = "cmp_str_printname"
 
