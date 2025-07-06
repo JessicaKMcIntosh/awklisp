@@ -112,6 +112,8 @@ function gc(the_car, the_cdr,   p, i) {
             printf("Expanding heap...") >"/dev/stderr"
         pair_limit += 4 * heap_increment
     }
+    if (loud_gc)
+        print "" >"/dev/stderr"
 }
 
 # ----~~~~++++====#### Set up ####====++++~~~~----
@@ -622,11 +624,13 @@ function print_profiling(proc) {
 function error(reason) {
     print "ERROR: " FILENAME ":" FNR " " reason >"/dev/stderr"
     close("/dev/stderr")
+    loud_gc = 0 # Prevent double close of the file.
     exit(1)
 }
 
 END {
     if (loud_gc) {
+        printf("\nGC...") >"/dev/stderr"
         close("/dev/stderr")
     }
 }
