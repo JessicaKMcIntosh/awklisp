@@ -19,7 +19,7 @@ BEGIN {
     # Register the module in the modules array so it can do whatever setup it requires.
     modules["get_type"] = "module_type_register"
 
-    # Tis would be a good place to add any global variables for the module.
+    # This would be a good place to add any global variables for the module.
 }
 
 # This is called just before the read-eval loop starts after all of the builtin setup is done.
@@ -32,6 +32,13 @@ function module_type_register() {
     # When the primitive is created a symbol is also created.
     # Finally the symbol is added to the module_func array with the name of the AWk function.
     module_func[def_prim("get_type", 1)] = "module_type_func"
+
+    # Type names.
+    # This is loaded here since it depends on variables declared after this file loads.
+    type_name[a_number] = "number"
+    type_name[a_pair]   = "pair"
+    type_name[a_string] = "string"
+    type_name[a_symbol] = "symbol"
 }
 
 # This is the Awk function called when the code is evaluated.
@@ -39,14 +46,20 @@ function module_type_register() {
 # Functions are to get their values from the stack.
 # See the implementations in the AWk functions eval() and apply()
 function module_type_func(    variable) {
-    variable = type_of(stack[frame_ptr])
+    variable = module_type_of(stack[frame_ptr])
     variable = toupper(substr(variable, 1, 1)) tolower(substr(variable, 2))
     return string_to_symbol(variable)
+}
+
+# And a helper function.
+function module_type_of(expr) {
+    return type_name[expr % 4]
 }
 
 END {
     # Stop lint errors.
     if (0) {
+        module_type_of()
         module_type_register()
         module_type_func()
     }

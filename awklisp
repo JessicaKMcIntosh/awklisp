@@ -9,12 +9,6 @@ BEGIN {
     symbol_ptr    = a_symbol = 2
     string_ptr    = a_string = 3
     protected_ptr            = 0
-
-    # Type names.
-    type_name[a_number] = "number"
-    type_name[a_pair]   = "pair"
-    type_name[a_string] = "string"
-    type_name[a_symbol] = "symbol"
 }
 
 function is(type, expr) {
@@ -28,8 +22,6 @@ function is_pair(expr)          { return expr % 4 == 1 }
 function is_string(expr)        { return expr % 4 == 3 }
 function is_symbol(expr)        { return expr % 4 == 2 }
 function is_atom(expr)          { return expr % 4 != 1 }
-
-function type_of(expr)          { return type_name[expr % 4] }
 
 function make_number(n)         { return n * 4 }
 
