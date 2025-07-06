@@ -7,16 +7,23 @@ REM https://en.wikibooks.org/wiki/Windows_Batch_Scripting
 REM Local variables please.
 SETLOCAL
 
+REM Sneaky check if debug is the first option.
+IF /I "%1"=="/d" SET DebugEnabled=yes
+IF /I "%1"=="-d" SET DebugEnabled=yes
+
 REM The path to this batch file.
 SET AWKLispDir=%~dp0
 
 REM Add the AWK Lisp paths to AWKPATH.
+SET AWKLispPath=%AWKLispDir%;%AWKLispDir%Modules;%AWKLispDir%Extras
 IF DEFINED AWKPATH (
     ECHO. %AWKPATH% | FINDSTR /C:%AWKLispDir% > NUL || (
-    SET AWKPATH=%AWKLispDir%;%AWKLispDir%Modules;%AWKLispDir%Extras;%AWKPATH%
+        CALL :DebugMsg Adding the AWK Lisp path to AWKPATH.
+        SET AWKPATH=%AWKLispPath%;%AWKPATH%
     )
 ) else (
-    SET AWKPATH=%AWKLispDir%;%AWKLispDir%Modules;%AWKLispDir%Extras
+    CALL :DebugMsg Setting AWKPATH to the AWK Lisp.
+    SET AWKPATH=%AWKLispPath%
 )
 
 REM ----~~~~++++====#### Settings ####====++++~~~~----
@@ -35,6 +42,9 @@ SET DebugEnabled=no
 
 REM Interactive mode.
 SET InteractiveEnabled=yes
+
+REM Loud GC.
+SET LoudGCEnabled=no
 
 REM Perform linting.
 SET LintEnabled=no
@@ -59,55 +69,41 @@ SET GawkArgs=
 
 REM       -----===== Process Command Line ======------
 
-ECHO ProcessArgs
 CALL :DebugMsg Processing command line options...
 :ProcessArgs
-    IF /I "%1"==""        GOTO :FinishedArgs
-    IF /I "%1"=="/d"      GOTO :SetDebug
-    IF /I "%1"=="-d"      GOTO :SetDebug
-    IF /I "%1"=="/g"      GOTO :SetGawk
-    IF /I "%1"=="-g"      GOTO :SetGawk
-    IF /I "%1"=="/l"      GOTO :SetLint
-    IF /I "%1"=="-l"      GOTO :SetLint
-    IF /I "%1"=="/m"      GOTO :SetModules
-    IF /I "%1"=="-m"      GOTO :SetModules
-    IF /I "%1"=="/n"      GOTO :SetInteractive
-    IF /I "%1"=="-n"      GOTO :SetInteractive
-    IF /I "%1"=="/o"      GOTO :SetObjects
-    IF /I "%1"=="-o"      GOTO :SetObjects
-    IF /I "%1"=="/q"      GOTO :SetQuiet
-    IF /I "%1"=="-q"      GOTO :SetQuiet
-    IF /I "%1"=="/s"      GOTO :SetStartup
-    IF /I "%1"=="-s"      GOTO :SetStartup
-    IF /I "%1"=="help"    GOTO :ShowHelp
-    IF /I "%1"=="/?"      GOTO :ShowHelp
-    IF /I "%1"=="/h"      GOTO :ShowHelp
-    IF /I "%1"=="-h"      GOTO :ShowHelp
-    IF /I "%1"=="--help"  GOTO :ShowHelp
+    IF /I "%1"==""              GOTO :FinishedArgs
     SET z=%1
-    IF /I "%z:~0,1%"=="/" GOTO :InvalidArg
-    IF /I "%z:~0,1%"=="-" GOTO :InvalidArg
+    IF /I NOT "%z:~0,1%"=="/" (
+        IF /I NOT "%z:~0,1%"=="-" GOTO :FinishedArgs
+    )
+    IF /I "%z:~1%"=="c"         GOTO :SetLoudGC
+    IF /I "%z:~1%"=="d"         GOTO :SetDebug
+    IF /I "%z:~1%"=="g"         GOTO :SetGawk
+    IF /I "%z:~1%"=="l"         GOTO :SetLint
+    IF /I "%z:~1%"=="m"         GOTO :SetModules
+    IF /I "%z:~1%"=="n"         GOTO :SetInteractive
+    IF /I "%z:~1%"=="o"         GOTO :SetObjects
+    IF /I "%z:~1%"=="q"         GOTO :SetQuiet
+    IF /I "%z:~1%"=="s"         GOTO :SetStartup
+    IF /I "%z:~1%"=="?"         GOTO :ShowHelp
+    IF /I "%z:~1%"=="h"         GOTO :ShowHelp
+    IF /I "%1"=="--help"        GOTO :ShowHelp
+    GOTO :InvalidArg
 :FinishedArgs
 
 REM Make sure Gawk is installed.
-ECHO CheckGawk
 CALL :DebugMsg Checking the Gawk program...
 CALL :CheckGawk
-IF %ERRORLEVEL% NEQ 0 GOTO :ExitScript
-
-REM Check if incompatible options are set.
-IF %LintEnabled% == yes (
-    IF %QuietEnabled% == yes (
-        ECHO Quiet /q and Lint /l are not compatible.
-        ECHO Lint /l will always disable Quiet /q.
-        GOTO :ExitScript
-    )
-)
+IF NOT ERRORLEVEL 0 GOTO :ExitScript
 
 REM Add remaining command line options.
 :AddArgs
     IF "%~1"=="" GOTO :EndAddArgs
-    SET GawkArgs=%GawkArgs% %1
+    IF "%GawkArgs%"=="" (
+        SET GawkArgs=%1
+    ) ELSE (
+        SET GawkArgs=%GawkArgs% %1
+    )
     SHIFT
     GOTO :AddArgs
 :EndAddArgs
@@ -138,6 +134,11 @@ GOTO :ExitScript
 
 :SetInteractive
     SET InteractiveEnabled=no
+    SHIFT
+    GOTO :ProcessArgs
+
+:SetLoudGC
+    SET LoudGCEnabled=yes
     SHIFT
     GOTO :ProcessArgs
 
@@ -180,10 +181,12 @@ REM Run AWK Lisp.
 
     IF %InteractiveEnabled% == yes (
         %GawkCmd% -
+        CALL :DebugMsg
         CALL :DebugMsg Exit code: %ERRORLEVEL%
         EXIT /B
     ) else (
         %GawkCmd% < NUL
+        CALL :DebugMsg
         CALL :DebugMsg Exit code: %ERRORLEVEL%
         EXIT /B
     )
@@ -194,14 +197,19 @@ REM Build the Gawk command to run AWK Lisp
     REM Start with the Gawk program.
     SET GawkCmd=%GawkProgram%
 
-    REM Set the variable quiet for less output.
-    IF %QuietEnabled% == yes (
-        SET GawkCmd=%GawkCmd% -v quiet=1
-    )
-
     REM Include the file that makes --lint less annoying.
     IF %LintEnabled% == yes (
         SET GawkCmd=%GawkCmd% --lint=no-ext -i lint.awk
+    )
+
+    REM Enable the quiet setting after lint, which disables it.
+    IF %QuietEnabled% == yes (
+        SET GawkCmd=%GawkCmd% -e "BEGIN{quiet=1}"
+    )
+
+    REM Enable the quiet setting after lint, which disables it.
+    IF %LoudGCEnabled% == yes (
+        SET GawkCmd=%GawkCmd% -e "BEGIN{loud_gc=1}"
     )
 
     REM Load the available modules.
@@ -223,14 +231,14 @@ REM Build the Gawk command to run AWK Lisp
     )
 
     REM Finally add any command line options.
-    SET GawkCmd=%GawkCmd%%GawkArgs%
+    SET GawkCmd=%GawkCmd% %GawkArgs%
     EXIT /B
 
 
 REM Check if the Gawk program exists.
 :CheckGawk
     %GawkProgram% --version > NUL 2>&1
-    IF %ERRORLEVEL% NEQ 0 (
+    IF NOT ERRORLEVEL 0 (
         ECHO Gawk is not in the current path. Aborting!
         ECHO Gawk Command: %GawkProgram%
         EXIT /B 1
@@ -239,7 +247,13 @@ REM Check if the Gawk program exists.
 
 REM Print the message if debug is enabled.
 :DebugMsg
-    IF %DebugEnabled% == yes ECHO DEBUG: %*
+    IF %DebugEnabled% == yes (
+        IF "%1"=="" (
+            ECHO.
+        ) else (
+            ECHO DEBUG: %*
+        )
+    )
     EXIT /B
 
 REM       -----===== Help Text ======------
@@ -251,6 +265,7 @@ REM Show some help text.
     ECHO.
     ECHO Options:
     ECHO /d or -d - Extra debugging output.
+    ECHO            This should be the first option.
     ECHO /h or -h - Display this help text. Also -? or /?
     ECHO /g or -g - Specify the Gawk program.
     ECHO            Defaults to: %GawkProgram%
