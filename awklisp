@@ -194,6 +194,7 @@ BEGIN {
     GENSYM      = def_prim("gensym", 0)
     RANDOM      = def_prim("random", 1)
     ERROR       = def_prim("error", "")
+    LOAD        = def_prim("load", 1)
 
     DRIVER      = string_to_symbol("top-level-driver")
 
@@ -343,6 +344,7 @@ function apply(proc) {
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
     if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
+    if (proc == LOAD)   return load_file(stack[frame_ptr])
 
     if (proc in module_func) {
         proc = module_func[proc]
@@ -372,6 +374,13 @@ function listify_args(    p, result) {
     for (p = stack_ptr - 1; frame_ptr <= p; --p)
         result = cons(stack[p], result)
     return result
+}
+
+function load_file(expr) {
+    if (!(expr in printname))
+        error("BUG: " expr " has no printname")
+    push_include(printname[expr]);
+    return expr
 }
 
 # ----~~~~++++====#### The environment ####====++++~~~~----
@@ -548,11 +557,7 @@ function advance() {
             }
         }
     }
-    if (match(tolower(line ""), /^@include\s+/)) {
-        line = substr(line, RLENGTH + 1)
-        push_include()
-        return advance()
-    } else if (match(line, /^"/)) {
+    if (match(line, /^"/)) {
         token = "\""
         line = substr(line, 2)
     } else if (match(line, "^[()'.]") ||
@@ -572,31 +577,9 @@ function advance() {
         error("Lexical error starting at " line)
 }
 
-# Read in an included file.
-function push_include(    pos) {
-        if (line == "")
-                error("Missing include file name.")
-        if (substr(line, 1, 1) == "\"") {
-            # Quoted file name.
-            line = substr(line, 2)
-            pos = index(line, "\"")
-            if (pos == 0)
-                error("Syntax error. Missing closing double quote.")
-            token = substr(line, 1, pos - 1)
-            line = substr(line, pos + 1)
-            if (token == "")
-                error("Missing include file name.")
-        } else {
-            # Bare file name.
-            match(line, "^[a-zA-Z0-9][a-zA-Z0-9.]+")
-            if (RLENGTH == 0)
-                error("Missing include file name.")
-            token = substr(line, 1, RLENGTH)
-            line = substr(line, RLENGTH + 1)
-        }
-        # Set the file to include and add it to the stack.
-        include_file = include_file_stack[++include_file_stack_ptr] = token
-        token = ""
+# Add a file to the include stack and set it as the file being read from.
+function push_include(file) {
+    include_file = include_file_stack[++include_file_stack_ptr] = file
 }
 
 # Drop down the include stack.

@@ -1,6 +1,6 @@
 ; List-processing procedures
 ; Uses: startup
-@include startup
+(load "startup")
 
 (define reverse
   (lambda (L) (revappend L '())))

@@ -1,6 +1,6 @@
 ; Simple Eliza program -- see Norvig, _Paradigms of AI Programming_.
 ; Uses: startup lists
-@include lists
+(load "lists")
 
 (define rule-pattern car)
 (define rule-answers cdr)

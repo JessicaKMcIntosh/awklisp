@@ -1,6 +1,7 @@
 ;** allow primitives
 ; Procedure call/return tracing
 ; Uses: startup
+(load "startup")
 
 (define trace
   (lambda (var)

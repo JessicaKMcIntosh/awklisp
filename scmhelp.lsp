@@ -1,4 +1,5 @@
 ; Stuff common to scheme.lsp and tail.lsp.
+(load "startup")
 
 ; Environment operations
 
