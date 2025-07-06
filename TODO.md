@@ -21,6 +21,12 @@ Most of those could be done with unit testing.
   * Defining a string variable.
   * (write) the string.
   * TODO: Add more as more string functions are added.
+  * These two are equivalent, the second uses hex and octal numbers.
+
+```scheme
+(write "A string with\tspecial\\ character\"s.=")
+(write "A string with\tspecia\154\\ char\x61cter\"s.\x3D")
+```
 
 * Types module. (get_type)
 
@@ -62,12 +68,29 @@ token = "'"
 
 * Loading a file. (load)
 
+## Documentation
+
+* How strings are handled.
+
+  Document the escape codes.
+  The same as Gawk except:
+  * \nnn (\077 or \177) for octal require three characters total.
+  * \xhh (\xa0 or \xFF) for hexadeciman require two characters total.
+  * \uhh.. is not supported. Too much work. :shrug:
+
+* A full list of functions and any deviations from R5RS.
+
 ## Would be good
 
 * For the batch file look for files with multiple extensions.
   Extend the processing of the command line args.
+* For the (load) command look for files with multiple extensions.
 
 ## Nice to have
+
+* Input for alternate bases prefixes are #b (binary), #o (octal), #d (decimal), and #x (hexadecimal)
+
+* (format)
 
 * Rearrange and rename the files.
   A consistent extension would help. `.scm`
@@ -98,3 +121,5 @@ Test case:
         )))
 (newline)
 ```
+
+* R5RS conpatability?
