@@ -34,7 +34,7 @@ function type_of(expr)          { return type_name[expr % 4] }
 function make_number(n)         { return n * 4 }
 
 function make_string(string) {
-    if (string in intern)
+    if ("\"" string "\"" in intern)
         return intern["\"" string "\""]
     string_ptr += 4
     intern["\"" string "\""] = string_ptr
@@ -416,11 +416,10 @@ function print_expr(expr) {
     print ""
 }
 
-# TODO: This should probably correctly reproduce a string.
 function write_expr(expr) {
     if (is_atom(expr)) {
         if (is_string(expr))
-            printf("\"%s\"", printname[expr])
+            printf("%s", printname[expr])
         else if (!is_symbol(expr))
             printf("%d", numeric_value(expr))
         else {
