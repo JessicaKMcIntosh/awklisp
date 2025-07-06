@@ -502,16 +502,17 @@ function skip_blanks() {
         advance()
 }
 
-function read_string(    pos, char) {
+function read_string(    pos, char, line_len) {
     token = ""
-    for (pos = 1; pos <= length(line); pos++) {
+    line_len = length(line)
+    for (pos = 1; pos <= line_len; pos++) {
         char = substr(line, pos, 1)
         if (char == "\"") {
             line = substr(line, pos + 1)
             return token
         } if (char == "\\") {
-            if (pos == length(line))
-                error("Unexpected end of string.")
+            if (pos == line_len)
+                unexpected_eos()
             char = substr(line, ++pos, 1)
             switch (char) {
                 case "\\": char = "\\"; break
@@ -522,11 +523,28 @@ function read_string(    pos, char) {
                 case "r":  char = "\r"; break
                 case "t":  char = "\t"; break
                 case "v":  char = "\v"; break
+                case "0":
+                case "1":
+                    pos = pos + 3
+                    if (pos > line_len)
+                        unexpected_eos()
+                    char = sprintf("%c", strtonum("0" substr(line, pos - 3, 3)))
+                break
+                case "x":
+                    pos = pos + 2
+                    if (pos > line_len)
+                        unexpected_eos()
+                    char = sprintf("%c", strtonum("0x" substr(line, pos - 1, 2)))
+                break
             }
             token = token char
         } else
             token = token char
     }
+    unexpected_eos()
+}
+
+function unexpected_eos() {
     error("Unexpected end of string.")
 }
 
