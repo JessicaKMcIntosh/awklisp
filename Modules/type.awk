@@ -4,9 +4,10 @@
 # Usage:
 # gawk -p -f Modules\type.awk -f awklisp startup -
 
-# (get_typ nil)   => Symbol
 # (get_type 11)   => Number
 # (get_type '(t)) => Pair
+# (get_type "s")  => String
+# (get_typ nil)   => Symbol
 
 BEGIN {
     modules["get_type"] = "module_type_register"

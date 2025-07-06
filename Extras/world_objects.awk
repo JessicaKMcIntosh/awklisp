@@ -1,6 +1,8 @@
 # Print out everything in values[] and properties[] as a pretty little tree.
 # The goal is for the output to be valid AWK Lisp code.
 
+# TODO: This should probably correctly reproduce a string.
+
 # Usage:
 # Include this file on the command line: -f Extras\world_objects.awk
 
@@ -31,10 +33,11 @@ function world_objects(    expr, name) {
         # No print name means it isn't really there.
         if (!(expr in printname))
             continue
-
         # Numbers are easy.
         if (is_number(value[expr]))
             name = "0"
+        else if (is_string(value[expr]))
+            name = sprintf("\"%s\"", printname[value[expr]])
         else {
             # Get the name of the value.
             name = (value[expr] in printname ? printname[value[expr]] : sprintf("<%s>", value[expr]))
@@ -75,7 +78,9 @@ function write_expr_indent(expr, indent, noindent, parent, name)
         if ((parent != NIL) && is_pair(parent) && is_pair(car[parent]) && (car[car[parent]] == LAMBDA))
             printf("\n%*s", (indent * 2), "")
 
-        if (!is_symbol(expr))
+        if (is_string(expr))
+            printf("\"%s\"", printname[expr])
+        else if (!is_symbol(expr))
             printf("%d", numeric_value(expr))
         else {
             printf("%s", expr in printname ? printname[expr] : sprintf("<%s>", expr))

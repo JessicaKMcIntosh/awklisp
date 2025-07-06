@@ -1,6 +1,8 @@
 # Dump out various bits of memory.
 # These output a LOT of text!
 
+# TODO: memory_dump_to_string should probably correctly reproduce a string.
+
 # Usage:
 # Include this file on the command line: -f Extras\world_dump.awk
 # Set the variables for the memory you want dumped. See the table below.
@@ -30,12 +32,21 @@ END {
     if (dump_values    || dump_all) memory_dump_values()
 }
 
+# Convert an expression to a string depending on the type.
+function memory_dump_to_string (expr) {
+    if (!(expr in printname))
+        return ""
+    if (is_string(expr))
+        return sprintf("\"%s\"", printname[expr])
+    return printname[expr]
+}
+
 function memory_dump_names(    expr, type, temp, rows) {
     print "Print Names:"
     for (expr in printname) {
         printf("%5d %s\n",
                 expr,
-                printname[expr])
+                memory_dump_to_string(expr))
     }
     print ""
 }
@@ -49,10 +60,10 @@ function memory_dump_pairs(    expr, rows) {
 
         printf("%7d %-12s %4d %-8s %-12s %4d %-8s",
                 expr,
-                (car[expr] in printname ? printname[car[expr]] : ""),
+                memory_dump_to_string(car[expr]),
                 car[expr],
                 type_of(car[expr]),
-                (cdr[expr] in printname ? printname[cdr[expr]] : ""),
+                memory_dump_to_string(cdr[expr]),
                 cdr[expr],
                 type_of(cdr[expr]))
         print ""
@@ -64,7 +75,7 @@ function memory_dump_protected(    expr) {
     print "Protected:"
     for (expr = 1; expr <= protected_ptr; ++expr)
         printf("%s %d %d\n",
-                printname[expr],
+                memory_dump_to_string(expr),
                 expr,
                 protected[expr])
     print ""
@@ -81,15 +92,15 @@ function memory_dump_stack(    expr, type, temp) {
         temp = stack[expr]
         printf("%4d %-22s %4d %-8s",
                 expr,
-                (temp in printname ? printname[temp] : ""),
-                (is_number(temp) ? numeric_value(temp) : temp),
+                memory_dump_to_string(temp),
+                temp,
                 type)
         if (type == "pair") {
             printf(" %-12s %4d %8s %-12s %4d %8s",
-                    (car[temp] in printname ? printname[car[temp]] : ""),
+                    memory_dump_to_string(car[temp]),
                     car[temp],
                     type_of(car[temp]),
-                    (cdr[temp] in printname ? printname[cdr[temp]] : ""),
+                    memory_dump_to_string(cdr[temp]),
                     cdr[temp],
                     type_of(cdr[temp]))
         }
@@ -107,17 +118,17 @@ function memory_dump_values(    expr, type, temp, rows) {
         type = type_of(value[expr])
         temp = value[expr]
         printf("%-16s %4d %-22s %4d %-8s",
-                (expr in printname ? printname[expr] : ""),
+                memory_dump_to_string(expr),
                 expr,
-                (temp in printname ? printname[temp] : ""),
-                (is_number(temp) ? numeric_value(temp) : temp),
+                memory_dump_to_string(temp),
+                temp,
                 type)
         if (type == "pair") {
             printf(" %-12s %4d %-8s %-12s %4d %-8s",
-                    (car[temp] in printname ? printname[car[temp]] : ""),
+                    memory_dump_to_string(car[temp]),
                     car[temp],
                     type_of(car[temp]),
-                    (cdr[temp] in printname ? printname[cdr[temp]] : ""),
+                    memory_dump_to_string(cdr[temp]),
                     cdr[temp],
                     type_of(cdr[temp]))
         }
@@ -141,7 +152,8 @@ function memory_dump_properties(    expr, left, right, rows) {
                 printname[left],
                 printname[right],
                 temp,
-                temp in printname ? printname[temp] : "",
+                memory_dump_to_string(temp),
                 type_of(temp))
     }
+    print ""
 }

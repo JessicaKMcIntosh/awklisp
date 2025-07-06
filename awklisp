@@ -7,11 +7,13 @@ BEGIN {
     a_number                 = 0
     pair_ptr      = a_pair   = 1
     symbol_ptr    = a_symbol = 2
+    string_ptr    = a_string = 3
     protected_ptr            = 0
 
     # Type names.
     type_name[a_number] = "number"
     type_name[a_pair]   = "pair"
+    type_name[a_string] = "string"
     type_name[a_symbol] = "symbol"
 }
 
@@ -23,12 +25,22 @@ function is(type, expr) {
 
 function is_number(expr)        { return expr % 4 == 0 }
 function is_pair(expr)          { return expr % 4 == 1 }
+function is_string(expr)        { return expr % 4 == 3 }
 function is_symbol(expr)        { return expr % 4 == 2 }
 function is_atom(expr)          { return expr % 4 != 1 }
 
 function type_of(expr)          { return type_name[expr % 4] }
 
 function make_number(n)         { return n * 4 }
+
+function make_string(string) {
+    if (string in intern)
+        return intern["\"" string "\""]
+    string_ptr += 4
+    intern["\"" string "\""] = string_ptr
+    printname[string_ptr] = string
+    return string_ptr
+}
 
 function numeric_value(expr) {
     if (expr % 4 != 0) error("Not a number")
@@ -175,6 +187,7 @@ BEGIN {
     PAIRP       = def_prim("pair?", 1)
     SYMBOLP     = def_prim("symbol?", 1)
     NUMBERP     = def_prim("number?", 1)
+    STRINGP     = def_prim("string?", 1)
     SETCAR      = def_prim("set-car!", 2)
     SETCDR      = def_prim("set-cdr!", 2)
     NREV        = def_prim("reverse!", 1)
@@ -318,6 +331,7 @@ function apply(proc) {
     if (proc == SYMBOLP)return is_symbol(stack[frame_ptr]) ? T : NIL
     if (proc == PAIRP)  return is_pair(stack[frame_ptr]) ? T : NIL
     if (proc == NUMBERP)return is_number(stack[frame_ptr]) ? T : NIL
+    if (proc == STRINGP)return is_string(stack[frame_ptr]) ? T : NIL
     if (proc == SETCAR) return car[is(a_pair, stack[frame_ptr])] = stack[frame_ptr+1]
     if (proc == SETCDR) return cdr[is(a_pair, stack[frame_ptr])] = stack[frame_ptr+1]
     if (proc == APPLY)  return do_apply(stack[frame_ptr], stack[frame_ptr+1])
@@ -402,9 +416,12 @@ function print_expr(expr) {
     print ""
 }
 
+# TODO: This should probably correctly reproduce a string.
 function write_expr(expr) {
     if (is_atom(expr)) {
-        if (!is_symbol(expr))
+        if (is_string(expr))
+            printf("\"%s\"", printname[expr])
+        else if (!is_symbol(expr))
             printf("%d", numeric_value(expr))
         else {
             if (!(expr in printname))
@@ -466,6 +483,11 @@ function read(committed,    result) {
         result = make_number(token)
         advance()
         return result
+    } else if (token == "\"") {
+        result = make_string(read_string())
+        token = line
+        advance()
+        return result
     } else {                            # a symbol
         result = string_to_symbol(token)
         advance()
@@ -476,6 +498,51 @@ function read(committed,    result) {
 function skip_blanks() {
     while (token ~ /^[ \t]*$/)
         advance()
+}
+
+function read_string(    pos, char) {
+    # Try to find a full string.
+    token = ""
+    for (;;) {
+    pos = index(line, "\"")
+        if (pos == 0) {
+            error("Syntax error. Missing closing double quote.")
+        }
+        token = token substr(line, 1, pos - 1)
+        line = substr(line, pos + 1)
+        if (token == "")
+            return ""
+        # Preceded by a backslash means there is more string.
+        if (substr(token, length(token)) != "\\")
+            break
+        token = token "\""
+    }
+
+    # Process backslash escaped characters.
+    # ! This doesn't work. Change the above for loop to handle this properly.
+    for (;;) {
+        pos = index(token, "\\")
+        if (pos == 0)
+            break
+        char = substr(token, pos + 1, 1)
+        print ">>" char "<<"
+        switch (char) {
+            case "\\": char = "\\"; break
+            case "a":  char = "\a"; break
+            case "b":  char = "\b"; break
+            case "f":  char = "\f"; break
+            case "n":  char = "\n"; break
+            case "r":  char = "\r"; break
+            case "t":  char = "\t"; break
+            case "v":  char = "\v"; break
+        }
+        printf(">>%s<<>>%s<<>>%s<<\n",substr(token, 1, pos - 1), char, substr(token, pos + 2))
+        token = substr(token, 1, pos - 1) char substr(token, pos + 2)
+    }
+    print "##" token "##"
+
+    # Return the string.
+    return token
 }
 
 function advance() {
@@ -503,6 +570,9 @@ function advance() {
         line = substr(line, RLENGTH + 1)
         push_include()
         return advance()
+    } else if (match(line, /^"/)) {
+        token = "\""
+        line = substr(line, 2)
     } else if (match(line, "^[()'.]") ||
         match(line, "^[_A-Za-z0-9=!@$%&*<>?+\\-*/:.]+") ||
         match(line, "^[ \\t]+")) {
