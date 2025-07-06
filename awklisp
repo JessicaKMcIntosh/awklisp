@@ -500,48 +500,31 @@ function skip_blanks() {
 }
 
 function read_string(    pos, char) {
-    # Try to find a full string.
     token = ""
-    for (;;) {
-    pos = index(line, "\"")
-        if (pos == 0) {
-            error("Syntax error. Missing closing double quote.")
-        }
-        token = token substr(line, 1, pos - 1)
-        line = substr(line, pos + 1)
-        if (token == "")
-            return ""
-        # Preceded by a backslash means there is more string.
-        if (substr(token, length(token)) != "\\")
-            break
-        token = token "\""
+    for (pos = 1; pos <= length(line); pos++) {
+        char = substr(line, pos, 1)
+        if (char == "\"") {
+            line = substr(line, pos + 1)
+            return token
+        } if (char == "\\") {
+            if (pos == length(line))
+                error("Unexpected end of string.")
+            char = substr(line, ++pos, 1)
+            switch (char) {
+                case "\\": char = "\\"; break
+                case "a":  char = "\a"; break
+                case "b":  char = "\b"; break
+                case "f":  char = "\f"; break
+                case "n":  char = "\n"; break
+                case "r":  char = "\r"; break
+                case "t":  char = "\t"; break
+                case "v":  char = "\v"; break
+            }
+            token = token char
+        } else
+            token = token char
     }
-
-    # Process backslash escaped characters.
-    # ! This doesn't work. Change the above for loop to handle this properly.
-    for (;;) {
-        pos = index(token, "\\")
-        if (pos == 0)
-            break
-        char = substr(token, pos + 1, 1)
-        print ">>" char "<<"
-        switch (char) {
-            case "\\": char = "\\"; break
-            case "a":  char = "\a"; break
-            case "b":  char = "\b"; break
-            case "f":  char = "\f"; break
-            case "n":  char = "\n"; break
-            case "r":  char = "\r"; break
-            case "t":  char = "\t"; break
-            case "v":  char = "\v"; break
-        }
-        printf(">>%s<<>>%s<<>>%s<<\n",substr(token, 1, pos - 1), char, substr(token, pos + 2))
-        token = substr(token, 1, pos - 1) char substr(token, pos + 2)
-    }
-    print "##" token "##"
-
-    # Return the string.
-    return token
+    error("Unexpected end of string.")
 }
 
 function advance() {
