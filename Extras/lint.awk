@@ -1,7 +1,7 @@
 # This is an addition to make lint happy about uninitialized global variables.
 
 BEGIN {
-    heap_increment = 100
+    heap_increment = 100 # This basically forces the gc to be exercised.
     profiling = 0
     quiet = 0
     loud_gc = 0
@@ -15,14 +15,4 @@ BEGIN {
     delete property
     delete stack
     delete value
-
-    # Stop the warning: close: `/dev/stderr' is not an open file, pipe or co-process
-    printf("") >"/dev/stderr"
-}
-
-END {
-    # Stop more errors with /dev/stderr.
-    if (!loud_gc) {
-        close("/dev/stderr")
-    }
 }
