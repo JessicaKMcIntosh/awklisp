@@ -21,3 +21,11 @@ function module_exit_register() {
 function module_exit_func() {
     exit(is_number(stack[frame_ptr]) ? numeric_value(stack[frame_ptr]) : stack[frame_ptr] == NIL ? 1 : 0)
 }
+
+END {
+    # Stop lint errors.
+    if (0) {
+        module_exit_register()
+        module_exit_func()
+    }
+}

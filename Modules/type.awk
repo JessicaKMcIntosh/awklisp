@@ -21,3 +21,11 @@ function module_type_func(variable) {
     variable = toupper(substr(variable, 1, 1)) substr(variable, 2)
     return string_to_symbol(variable)
 }
+
+END {
+    # Stop lint errors.
+    if (0) {
+        module_type_register()
+        module_type_func()
+    }
+}
