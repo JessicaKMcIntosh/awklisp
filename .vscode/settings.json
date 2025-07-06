@@ -53,6 +53,7 @@
         "subsep",
         "Sussman",
         "symbolp",
+        "tolower",
         "untrace"
     ],
 }
