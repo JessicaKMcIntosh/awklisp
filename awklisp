@@ -15,8 +15,7 @@ BEGIN {
     type_name[a_symbol] = "symbol"
 }
 
-function is(type, expr)
-{
+function is(type, expr) {
     if (expr % 4 != type)
         error("Expected a " type_name[type] ", not a " type_name[expr % 4])
     return expr
@@ -31,15 +30,13 @@ function type_of(expr)          { return type_name[expr % 4] }
 
 function make_number(n)         { return n * 4 }
 
-function numeric_value(expr)
-{
+function numeric_value(expr) {
     if (expr % 4 != 0) error("Not a number")
     return expr / 4
 }
 
 # Return the symbol :string names.
-function string_to_symbol(string)
-{
+function string_to_symbol(string) {
     if (string in intern)
         return intern[string]
     symbol_ptr += 4
@@ -50,8 +47,7 @@ function string_to_symbol(string)
 
 # Define a primitive procedure, with :nparams parameters,
 # bound to the symbol named :name.
-function def_prim(name, nparams,        sym)
-{
+function def_prim(name, nparams,    sym) {
     sym = string_to_symbol(name)
     value[sym] = string_to_symbol(sprintf("#<Primitive %s>", name))
     if (nparams != "")
@@ -62,8 +58,7 @@ function def_prim(name, nparams,        sym)
 # ----~~~~++++====#### Garbage collection ####====++++~~~~----
 
 # Make a new pair.
-function cons(the_car, the_cdr)
-{
+function cons(the_car, the_cdr) {
     while (pair_ptr in marks) {
         delete marks[pair_ptr]
         pair_ptr += 4
@@ -79,8 +74,7 @@ function cons(the_car, the_cdr)
 function protect(object) { protected[++protected_ptr] = object }
 function unprotect()     { --protected_ptr }
 
-function mark(object)
-{
+function mark(object) {
     while (is_pair(object) && !(object in marks)) {             #** speed
         marks[object] = 1
         mark(car[object])
@@ -88,8 +82,7 @@ function mark(object)
     }
 }
 
-function gc(the_car, the_cdr,   p, i)
-{
+function gc(the_car, the_cdr,   p, i) {
     if (loud_gc)
         printf("\nGC...") >"/dev/stderr"
     mark(the_car); mark(the_cdr)
@@ -136,16 +129,18 @@ BEGIN {
     if (!heap_increment) heap_increment = 1500
     pair_limit = a_pair + 4 * heap_increment
 
+    # Common symbols.
     NIL         = string_to_symbol("nil")
     T           = string_to_symbol("t")
-    value[NIL] = NIL
-    value[T] = T
-    car[NIL] = cdr[NIL] = NIL   # this is convenient in a couple places...
+    value[NIL]  = NIL
+    value[T]    = T
+    car[NIL]    = cdr[NIL] = NIL   # this is convenient in a couple places...
 
     THE_EOF_OBJECT = string_to_symbol("#eof")
     value[string_to_symbol("the-eof-object")] = THE_EOF_OBJECT
     eof = "(eof)"
 
+    # Special forms.
     QUOTE       = string_to_symbol("quote");    is_special[QUOTE] = 1
     LAMBDA      = string_to_symbol("lambda");   is_special[LAMBDA] = 1
     IF          = string_to_symbol("if");       is_special[IF] = 1
@@ -154,6 +149,7 @@ BEGIN {
     PROGN       = string_to_symbol("begin");    is_special[PROGN] = 1
     WHILE       = string_to_symbol("while");    is_special[WHILE] = 1
 
+    # Normal functions.
     EQ          = def_prim("eq?", 2)
     NULL        = def_prim("null?", 1)
     CAR         = def_prim("car", 1)
@@ -186,9 +182,9 @@ BEGIN {
     RANDOM      = def_prim("random", 1)
     ERROR       = def_prim("error", "")
 
-    register_modules()
-
     DRIVER      = string_to_symbol("top-level-driver")
+
+    register_modules()
 }
 
 # ----~~~~++++====#### The interpreter ####====++++~~~~----
@@ -224,8 +220,7 @@ function read_eval(expr) {
 # All the interpretation routines have the precondition that their
 # arguments are protected from garbage collection.
 
-function eval(expr,     old_frame_ptr, proc)
-{
+function eval(expr,     old_frame_ptr, proc) {
     if (is_atom(expr))                  #** speed
         if (is_symbol(expr)) {
             if (!(expr in value)) error("Unbound variable: " printname[expr])
@@ -274,24 +269,21 @@ function eval(expr,     old_frame_ptr, proc)
 }
 
 # Evaluate a sequence of expressions, returning the last value.
-function progn(exprs)
-{
+function progn(exprs) {
     for (; cdr[exprs] != NIL; exprs = cdr[exprs])
         eval(car[exprs])
     return eval(car[exprs])
 }
 
 # Evaluate the operands of a procedure, pushing the results on the stack.
-function eval_rands(rands)
-{
+function eval_rands(rands) {
     for (; rands != NIL; rands = cdr[rands])
         stack[stack_ptr++] = eval(car[rands])
 }
 
 # Call the procedure :proc, with args stack[frame_ptr]..stack[stack_ptr-1]
 # (in that order).
-function apply(proc)
-{
+function apply(proc) {
     if (profiling)
         if (proc in call_count)
             ++call_count[proc]
@@ -346,8 +338,7 @@ function apply(proc)
     error("Unknown procedure type")
 }
 
-function do_apply(proc, args,           old_frame_ptr)
-{
+function do_apply(proc, args,    old_frame_ptr) {
     old_frame_ptr = frame_ptr
     frame_ptr = stack_ptr
 
@@ -362,8 +353,7 @@ function do_apply(proc, args,           old_frame_ptr)
     return global_result
 }
 
-function listify_args(          p, result)
-{
+function listify_args(    p, result) {
     result = NIL
     for (p = stack_ptr - 1; frame_ptr <= p; --p)
         result = cons(stack[p], result)
@@ -380,8 +370,7 @@ function listify_args(          p, result)
 # store away the old value, since that stack frame's not needed
 # for anything else after the extend_env() call.
 
-function extend_env(vars,       p, temp)
-{
+function extend_env(vars,    p, temp) {
     for (p = frame_ptr; vars != NIL; vars = cdr[vars]) {
         if (p == stack_ptr)
             error("Too many arguments to procedure")
@@ -396,8 +385,7 @@ function extend_env(vars,       p, temp)
         error("Not enough arguments to procedure")
 }
 
-function unwind_env(vars,       p)
-{
+function unwind_env(vars,    p) {
     for (p = frame_ptr; vars != NIL; vars = cdr[vars]) {
         if (stack[p] == "")
             delete value[car[vars]]
@@ -409,14 +397,12 @@ function unwind_env(vars,       p)
 
 # ----~~~~++++====#### Output ####====++++~~~~----
 
-function print_expr(expr)
-{
+function print_expr(expr) {
     write_expr(expr)
     print ""
 }
 
-function write_expr(expr)
-{
+function write_expr(expr) {
     if (is_atom(expr)) {
         if (!is_symbol(expr))
             printf("%d", numeric_value(expr))
@@ -442,8 +428,7 @@ function write_expr(expr)
 
 # ----~~~~++++====#### Input ####====++++~~~~----
 
-function read(committed,      result)
-{
+function read(committed,    result) {
     skip_blanks()
     if (token == eof)
         if (committed)
@@ -488,14 +473,12 @@ function read(committed,      result)
     }
 }
 
-function skip_blanks()
-{
+function skip_blanks() {
     while (token ~ /^[ \t]*$/)
         advance()
 }
 
-function advance()
-{
+function advance() {
     if (include_file != "") {
         if (token == eof) {
             pop_include()
@@ -559,7 +542,7 @@ function push_include(    pos) {
             token = substr(line, 1, RLENGTH)
             line = substr(line, RLENGTH + 1)
         }
-        # Set the file to include and addit to the stack.
+        # Set the file to include and add it to the stack.
         include_file = include_file_stack[++include_file_stack_ptr] = token
         token = ""
 }
@@ -587,8 +570,7 @@ function register_modules(name) {
 # ----~~~~++++====#### Miscellany ####====++++~~~~----
 
 # Destructively reverse :list and append :reversed_head.
-function nreverse(list, reversed_head,          tail)
-{
+function nreverse(list, reversed_head,    tail) {
     while (is_pair(list)) {             #** speed?
         tail = cdr[list]
         cdr[list] = reversed_head
@@ -609,8 +591,7 @@ function print_profiling(proc) {
     }
 }
 
-function error(reason)
-{
+function error(reason) {
     print "ERROR: " FILENAME ":" FNR " " reason >"/dev/stderr"
     close("/dev/stderr")
     exit(1)
