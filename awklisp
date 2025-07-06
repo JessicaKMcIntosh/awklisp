@@ -578,6 +578,7 @@ function push_include(file) {
 function pop_include() {
     if (include_file_stack_ptr == 0)
         error("BUG: Attempting to pop the include stack while empty.")
+    close(include_file)
     include_file = ""
     if (--include_file_stack_ptr > 0)
         include_file = include_file_stack[include_file_stack_ptr]
