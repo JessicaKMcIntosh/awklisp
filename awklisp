@@ -219,7 +219,7 @@ function read_eval(expr) {
             if (quiet)
                 eval(expr)
             else
-                print_expr(eval(expr))
+                print expr_to_string(eval(expr))
             unprotect()
         }
     }
@@ -332,12 +332,12 @@ function apply(proc) {
     if (proc == APPLY)  return do_apply(stack[frame_ptr], stack[frame_ptr+1])
     if (proc == EVAL)   return eval(stack[frame_ptr])
     if (proc == NREV)   return nreverse(stack[frame_ptr], NIL)
-    if (proc == WRITE)  { write_expr(stack[frame_ptr]); printf(" "); return NIL }
+    if (proc == WRITE)  { printf("%s ", expr_to_string(stack[frame_ptr])); return NIL }
     if (proc == NEWLINE){ printf("\n"); return NIL }
     if (proc == READ)   return read(0)
     if (proc == RANDOM) return make_number(int(rand() * numeric_value(stack[frame_ptr])))
     if (proc == GENSYM) return string_to_symbol("#G" ++gensym_counter)
-    if (proc == ERROR)  { printf("Error!\n"); print_expr(listify_args()); exit(1) }
+    if (proc == ERROR)  { printf("Error!\n"); print expr_to_string(listify_args()); exit(1) }
     if (proc == LOAD)   return load_file(stack[frame_ptr])
 
     if (proc in module_func) {
@@ -414,35 +414,29 @@ function unwind_env(vars,    p) {
 
 # ----~~~~++++====#### Output ####====++++~~~~----
 
-function print_expr(expr) {
-    write_expr(expr)
-    print ""
-}
-
-function write_expr(expr) {
+function expr_to_string(expr,    result) {
+    result = ""
     if (is_atom(expr)) {
         if (is_string(expr))
-            printf("%s", printname[expr])
+            return sprintf("%s", printname[expr])
         else if (!is_symbol(expr))
-            printf("%d", numeric_value(expr))
+            return sprintf("%d", numeric_value(expr))
         else {
             if (!(expr in printname))
                 error("BUG: " expr " has no printname")
-            printf("%s", printname[expr])
+            return sprintf("%s", printname[expr])
         }
     } else {
-        printf("(")
-        write_expr(car[expr])
+        result = "(" expr_to_string(car[expr])
         for (expr = cdr[expr]; is_pair(expr); expr = cdr[expr]) {
-            printf(" ")
-            write_expr(car[expr])
+            result = result " " expr_to_string(car[expr])
         }
         if (expr != NIL) {
-            printf(" . ")
-            write_expr(expr)
+            result = result " . " expr_to_string(expr)
         }
-        printf(")")
+        result = result ")"
     }
+    return result
 }
 
 # ----~~~~++++====#### Input ####====++++~~~~----
@@ -635,7 +629,7 @@ function print_profiling(proc) {
     print "Profiling:"
     for (proc in call_count) {
         printf("%5d ", call_count[proc])
-        print_expr(proc)
+        print expr_to_string(proc)
     }
 }
 
