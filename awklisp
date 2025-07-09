@@ -25,6 +25,7 @@ function is_atom(expr)          { return expr % 4 != 1 }
 
 function make_number(n)         { return n * 4 }
 
+# Return the symbol "string" names.
 function make_string(string) {
     if ("\"" string "\"" in intern)
         return intern["\"" string "\""]
@@ -51,6 +52,7 @@ function string_to_symbol(string) {
 
 # Define a primitive procedure, with :nparams parameters,
 # bound to the symbol named :name.
+# If nparams == "" then there is not an expected number of parameters.
 function def_prim(name, nparams,    sym) {
     sym = string_to_symbol(name)
     value[sym] = string_to_symbol(sprintf("#<Primitive %s>", name))
@@ -62,6 +64,7 @@ function def_prim(name, nparams,    sym) {
 # ----~~~~++++====#### Garbage collection ####====++++~~~~----
 
 # Make a new pair.
+# Returns the symbol.
 function cons(the_car, the_cdr) {
     while (pair_ptr in marks) {
         delete marks[pair_ptr]
@@ -75,9 +78,11 @@ function cons(the_car, the_cdr) {
     return pair_ptr - 4
 }
 
+# Protect objects from being collected during certain tasks.
 function protect(object) { protected[++protected_ptr] = object }
 function unprotect()     { --protected_ptr }
 
+# Mark a pair, and all of descendants.
 function mark(object) {
     while (is_pair(object) && !(object in marks)) {             #** speed
         marks[object] = 1
@@ -86,10 +91,10 @@ function mark(object) {
     }
 }
 
-function gc(the_car, the_cdr,   p, i) {
+# Mark all objects.
+function gc_mark(    p, i) {
     if (loud_gc)
         printf("\nGC...") >"/dev/stderr"
-    mark(the_car); mark(the_cdr)
     for (p = 1; p <= protected_ptr; ++p)
         mark(protected[p])
     for (p in stack)
@@ -102,6 +107,13 @@ function gc(the_car, the_cdr,   p, i) {
         mark(substr(p, i+1))
         mark(property[p])
     }
+}
+
+# Mark all objects in use then try to locate a free pair.
+# If all available pair IDs are in use expands the heap.
+function gc(the_car, the_cdr,   p, i) {
+    gc_mark()
+    mark(the_car); mark(the_cdr)
     pair_ptr = a_pair
     while (pair_ptr in marks) {
         delete marks[pair_ptr]
