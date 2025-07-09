@@ -1,7 +1,9 @@
 # Dump out various bits of memory.
 # These output a LOT of text!
 
-# TODO: memory_dump_to_string should probably correctly reproduce a string.
+# Requires the type module be loaded.
+
+# TODO: world_dump_to_string should probably correctly reproduce a string.
 
 # Usage:
 # Include this file on the command line: -f Extras\world_dump.awk
@@ -22,18 +24,25 @@
 # For example, do dump everything:
 # gawk -f awklisp -f Extras\world_dump.awk -v dump_all=1 startup
 
+
 END {
+    # Take from Modules/type.awk for displaying types.
+    world_dump_type_name[a_number] = "number"
+    world_dump_type_name[a_pair]   = "pair"
+    world_dump_type_name[a_string] = "string"
+    world_dump_type_name[a_symbol] = "symbol"
+
     printf("\n\nDumping Memory:\n")
-    if (dump_names     || dump_all) memory_dump_names()
-    if (dump_pairs     || dump_all) memory_dump_pairs()
-    if (dump_props     || dump_all) memory_dump_properties()
-    if (dump_protected || dump_all) memory_dump_protected()
-    if (dump_stack     || dump_all) memory_dump_stack()
-    if (dump_values    || dump_all) memory_dump_values()
+    if (dump_names     || dump_all) world_dump_names()
+    if (dump_pairs     || dump_all) world_dump_pairs()
+    if (dump_props     || dump_all) world_dump_properties()
+    if (dump_protected || dump_all) world_dump_protected()
+    if (dump_stack     || dump_all) world_dump_stack()
+    if (dump_values    || dump_all) world_dump_values()
 }
 
 # Convert an expression to a string depending on the type.
-function memory_dump_to_string (expr) {
+function world_dump_to_string (expr) {
     if (!(expr in printname))
         return ""
     if (is_string(expr))
@@ -41,17 +50,17 @@ function memory_dump_to_string (expr) {
     return printname[expr]
 }
 
-function memory_dump_names(    expr, type, temp, rows) {
+function world_dump_names(    expr) {
     print "Print Names:"
     for (expr in printname) {
         printf("%5d %s\n",
                 expr,
-                memory_dump_to_string(expr))
+                world_dump_to_string(expr))
     }
     print ""
 }
 
-function memory_dump_pairs(    expr, rows) {
+function world_dump_pairs(    expr, rows) {
     print "Pairs:"
     rows = 0
     for (expr in car) {
@@ -60,77 +69,77 @@ function memory_dump_pairs(    expr, rows) {
 
         printf("%7d %-12s %4d %-8s %-12s %4d %-8s",
                 expr,
-                memory_dump_to_string(car[expr]),
+                world_dump_to_string(car[expr]),
                 car[expr],
-                type_of(car[expr]),
-                memory_dump_to_string(cdr[expr]),
+                world_dump_type_name[car[expr] % 4],
+                world_dump_to_string(cdr[expr]),
                 cdr[expr],
-                type_of(cdr[expr]))
+                world_dump_type_name[cdr[expr] % 4])
         print ""
     }
     print ""
 }
 
-function memory_dump_protected(    expr) {
+function world_dump_protected(    expr) {
     print "Protected:"
     for (expr = 1; expr <= protected_ptr; ++expr)
         printf("%s %d %d\n",
-                memory_dump_to_string(expr),
+                world_dump_to_string(expr),
                 expr,
                 protected[expr])
     print ""
 }
 
-function memory_dump_stack(    expr, type, temp) {
+function world_dump_stack(    expr, type, temp, rows) {
     print "Stack: (This is probably meaningless.)"
     printf("Stack Pointer: %d\n", stack_ptr)
     printf("Frame Pointer: %d\n", frame_ptr)
     for (expr in stack) {
         if ((rows++ % 20) == 0)
             print " Num Value: Name              ID Type     CAR: Name      ID   Type   CDR: Name      ID   Type"
-        type = type_of(stack[expr])
+        type = world_dump_type_name[stack[expr] % 4]
         temp = stack[expr]
         printf("%4d %-22s %4d %-8s",
                 expr,
-                memory_dump_to_string(temp),
+                world_dump_to_string(temp),
                 temp,
                 type)
         if (type == "pair") {
             printf(" %-12s %4d %8s %-12s %4d %8s",
-                    memory_dump_to_string(car[temp]),
+                    world_dump_to_string(car[temp]),
                     car[temp],
-                    type_of(car[temp]),
-                    memory_dump_to_string(cdr[temp]),
+                    world_dump_type_name[car[temp] % 4],
+                    world_dump_to_string(cdr[temp]),
                     cdr[temp],
-                    type_of(cdr[temp]))
+                    world_dump_type_name[cdr[temp] % 4])
         }
         print ""
     }
     print ""
 }
 
-function memory_dump_values(    expr, type, temp, rows) {
+function world_dump_values(    expr, type, temp, rows) {
     print "Values:"
     rows = 0
     for (expr in value) {
         if ((rows++ % 20) == 0)
             print "Symbol             ID Value: Name              ID Type     CAR: Name      ID Type     CDR: Name      ID Type"
-        type = type_of(value[expr])
+        type = world_dump_type_name[value[expr] % 4]
         temp = value[expr]
         printf("%-16s %4d %-22s %4d %-8s",
-                memory_dump_to_string(expr),
+                world_dump_to_string(expr),
                 expr,
-                memory_dump_to_string(temp),
+                world_dump_to_string(temp),
                 temp,
                 type)
         if (type == "pair") {
             printf(" %-12s %4d %-8s %-12s %4d %-8s",
-                    memory_dump_to_string(car[temp]),
+                    world_dump_to_string(car[temp]),
                     car[temp],
-                    type_of(car[temp]),
-                    memory_dump_to_string(cdr[temp]),
+                    world_dump_type_name[car[temp] % 4],
+                    world_dump_to_string(cdr[temp]),
                     cdr[temp],
-                    type_of(cdr[temp]))
+                    world_dump_type_name[cdr[temp] % 4])
         }
         if (expr in properties)
             printf(" Prop")
@@ -139,7 +148,7 @@ function memory_dump_values(    expr, type, temp, rows) {
     print ""
 }
 
-function memory_dump_properties(    expr, left, right, rows) {
+function world_dump_properties(    expr, left, right, rows, temp, i) {
     print "Properties:"
     rows = 0
     for (expr in property) {
@@ -152,8 +161,8 @@ function memory_dump_properties(    expr, left, right, rows) {
                 printname[left],
                 printname[right],
                 temp,
-                memory_dump_to_string(temp),
-                type_of(temp))
+                world_dump_to_string(temp),
+                world_dump_type_name[temp % 4])
     }
     print ""
 }
