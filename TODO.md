@@ -7,7 +7,6 @@
 
 ## URGENT
 
-* Fix printing of strings in `Extras/world_objects.awk` to create reproducible strings.
 * Write a shell script for *nix.
 
 ## Test Cases
@@ -123,3 +122,7 @@ Test case:
 ```
 
 * R5RS conpatability?
+
+## Complete
+
+* 2025-07-08 [URGENT]  Fix printing of strings in `Extras/world_objects.awk` to create reproducible strings.
