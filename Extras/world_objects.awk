@@ -1,8 +1,6 @@
 # Print out everything in values[] and properties[] as a pretty little tree.
 # The goal is for the output to be valid AWK Lisp code.
 
-# TODO: This should probably correctly reproduce a string.
-
 # Usage:
 # Include this file on the command line: -f Extras\world_objects.awk
 
@@ -10,16 +8,22 @@
 # gawk -f awklisp -f Extras\world_objects.awk startup
 
 END {
+    # Prepare the ordinal table for character conversions.
+    world_objects_ord_init()
+
+    # Write out the objects
     printf("\n\nObjects:\n")
     world_objects()
 
     # Make lint happy.
-    cmp_str_printname(0, 0, 0, 0)
+    if (0) {
+        world_objects_cmp_str(0, 0, 0, 0)
+    }
 }
 
 function world_objects(    expr, name) {
     # Sort by the printname when possible.
-    PROCINFO["sorted_in"] = "cmp_str_printname"
+    PROCINFO["sorted_in"] = "world_objects_cmp_str"
 
     # Reuse marks for noting which values were already printed.
     delete marks
@@ -38,7 +42,7 @@ function world_objects(    expr, name) {
         if (is_number(value[expr]))
             name = "0"
         else if (is_string(value[expr]))
-            name = sprintf("\"%s\"", printname[value[expr]])
+            name = world_objects_escape_string(printname[value[expr]])
         else {
             # Get the name of the value.
             name = (value[expr] in printname ? printname[value[expr]] : sprintf("<%s>", value[expr]))
@@ -61,8 +65,8 @@ function world_objects(    expr, name) {
         if (expr in marks)
             continue
         printf("%c%s ", 40, "define")
-        write_expr_indent(expr, 0, 0, NIL)
-        write_expr_indent(value[expr], 1, 0, NIL)
+        world_objects_write_expr(expr, 0, 0, NIL)
+        world_objects_write_expr(value[expr], 1, 0, NIL)
         printf("%c\n", 41)
     }
 
@@ -70,7 +74,7 @@ function world_objects(    expr, name) {
 }
 
 # This was adapted from write_expr(expr) to add indention.
-function write_expr_indent(expr, indent, noindent, parent, name)
+function world_objects_write_expr(expr, indent, noindent, parent, name)
 {
     if (is_atom(expr)) {
         # This is a special case for a parameter given to a lambda.
@@ -80,7 +84,7 @@ function write_expr_indent(expr, indent, noindent, parent, name)
             printf("\n%*s", (indent * 2), "")
 
         if (is_string(expr))
-            printf("\"%s\"", printname[expr])
+            printf("%s", world_objects_escape_string(printname[expr]))
         else if (!is_symbol(expr))
             printf("%d", numeric_value(expr))
         else {
@@ -98,7 +102,7 @@ function write_expr_indent(expr, indent, noindent, parent, name)
 
         # Don't print lines with only an indented open paren.
         # This brings the next line up to make things prettier.
-        write_expr_indent(car[expr], indent + 1, is_pair(car[expr]), NIL)
+        world_objects_write_expr(car[expr], indent + 1, is_pair(car[expr]), NIL)
 
         # Don't indent the next line to make certain forms prettier.
         if (car[expr] == LAMBDA || car[expr] == IF || car[expr] == WHILE)
@@ -107,13 +111,13 @@ function write_expr_indent(expr, indent, noindent, parent, name)
         parent = expr
         for (expr = cdr[expr]; is_pair(expr); expr = cdr[expr]) {
             printf(" ")
-            write_expr_indent(car[expr], indent + 1, noindent, parent)
+            world_objects_write_expr(car[expr], indent + 1, noindent, parent)
             noindent = 0
             parent = expr
         }
         if (expr != NIL) {
             printf(" . ")
-            write_expr_indent(expr, indent + 1, noindent, NIL)
+            world_objects_write_expr(expr, indent + 1, noindent, NIL)
         }
         printf("%c", 41)
     }
@@ -131,19 +135,50 @@ function write_world_properties(    p, i, left, right, count) {
             printf("%c%s '%s", 40, "define-macro", printname[left])
         else
             printf("%c%s '%s '%s", 40, "put", printname[left], printname[right])
-        write_expr_indent(property[p], 1, 0, NIL)
+        world_objects_write_expr(property[p], 1, 0, NIL)
         printf("%c\n", 41)
     }
     if (count == 0)
         print "No Properties Defined!"
 }
 
+function world_objects_ord_init(    char, ord) {
+    for (ord = 0; ord <= 255; ord ++) {
+        char = sprintf("%c", ord)
+        world_objects_ord[char] = ord
+    }
+}
+
+function world_objects_escape_string(str,    new, pos, char) {
+    new = ""
+    for  (pos = 1; pos <= length(str); pos++) {
+        char = substr(str, pos, 1)
+        switch (char) {
+            case "\a": char = "\\a";  break
+            case "\b": char = "\\b";  break
+            case "\f": char = "\\f";  break
+            case "\n": char = "\\n";  break
+            case "\r": char = "\\r";  break
+            case "\t": char = "\\t";  break
+            case "\v": char = "\\v";  break
+            case "\"": char = "\\\""; break
+            case "\\": char = "\\\\"; break
+            default:
+                if (char < " ") {
+                    char = sprintf("\\x%x", world_objects_ord[char])
+                }
+            break
+        }
+        new = new char
+    }
+    return "\"" new "\"";
+}
+
 # Sorting functions.
 # This is taken from the GNU AWK manual.
 # Modified to sort by printname of the values.
 # https://www.gnu.org/software/gawk/manual/gawk.html#Array-Sorting
-
-function cmp_str_printname(i1, v1, i2, v2)
+function world_objects_cmp_str(i1, v1, i2, v2)
 {
     # Try to get the print name for each value.
     if (i1 in printname)

@@ -1,10 +1,6 @@
 # Dump out various bits of memory.
 # These output a LOT of text!
 
-# Requires the type module be loaded.
-
-# TODO: world_dump_to_string should probably correctly reproduce a string.
-
 # Usage:
 # Include this file on the command line: -f Extras\world_dump.awk
 # Set the variables for the memory you want dumped. See the table below.
@@ -32,6 +28,9 @@ END {
     world_dump_type_name[a_string] = "string"
     world_dump_type_name[a_symbol] = "symbol"
 
+    # Prepare the ordinal table for character conversions.
+    world_dump_ord_init()
+
     printf("\n\nDumping Memory:\n")
     if (dump_names     || dump_all) world_dump_names()
     if (dump_pairs     || dump_all) world_dump_pairs()
@@ -39,15 +38,6 @@ END {
     if (dump_protected || dump_all) world_dump_protected()
     if (dump_stack     || dump_all) world_dump_stack()
     if (dump_values    || dump_all) world_dump_values()
-}
-
-# Convert an expression to a string depending on the type.
-function world_dump_to_string (expr) {
-    if (!(expr in printname))
-        return ""
-    if (is_string(expr))
-        return sprintf("\"%s\"", printname[expr])
-    return printname[expr]
 }
 
 function world_dump_names(    expr) {
@@ -165,4 +155,45 @@ function world_dump_properties(    expr, left, right, rows, temp, i) {
                 world_dump_type_name[temp % 4])
     }
     print ""
+}
+
+# Convert an expression to a string depending on the type.
+function world_dump_to_string (expr) {
+    if (!(expr in printname))
+        return ""
+    if (is_string(expr))
+        return world_dump_escape_string(printname[expr])
+    return printname[expr]
+}
+
+function world_dump_ord_init(    char, ord) {
+    for (ord = 0; ord <= 255; ord ++) {
+        char = sprintf("%c", ord)
+        world_objects_ord[char] = ord
+    }
+}
+
+function world_dump_escape_string(str,    new, pos, char) {
+    new = ""
+    for  (pos = 1; pos <= length(str); pos++) {
+        char = substr(str, pos, 1)
+        switch (char) {
+            case "\a": char = "\\a";  break
+            case "\b": char = "\\b";  break
+            case "\f": char = "\\f";  break
+            case "\n": char = "\\n";  break
+            case "\r": char = "\\r";  break
+            case "\t": char = "\\t";  break
+            case "\v": char = "\\v";  break
+            case "\"": char = "\\\""; break
+            case "\\": char = "\\\\"; break
+            default:
+                if (char < " ") {
+                    char = sprintf("\\x%x", world_objects_ord[char])
+                }
+            break
+        }
+        new = new char
+    }
+    return "\"" new "\"";
 }
