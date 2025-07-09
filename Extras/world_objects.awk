@@ -24,7 +24,7 @@ function world_objects(    expr, name) {
     # Reuse marks for noting which values were already printed.
     delete marks
 
-    # First print symbols thar are just atoms, like primitives.
+    # First print symbols thar are just atoms, like strings and numbers.
     for (expr in value) {
         if (!(is_symbol(expr) && is_atom(value[expr])))
             continue
@@ -33,6 +33,7 @@ function world_objects(    expr, name) {
         # No print name means it isn't really there.
         if (!(expr in printname))
             continue
+
         # Numbers are easy.
         if (is_number(value[expr]))
             name = "0"
