@@ -93,18 +93,17 @@ function world_gc_values(    expr, type, temp, rows) {
                 world_gc_to_string(temp),
                 temp,
                 type)
-        if (type == "pair") {
-            printf(" %-12s %4d %-8s %-12s %4d %-8s %-3s",
+        if (type == "pair")
+            printf(" %-12s %4d %-8s %-12s %4d %-8s",
                     world_gc_to_string(car[temp]),
                     car[temp],
                     world_gc_type_name[car[temp] % 4],
                     world_gc_to_string(cdr[temp]),
                     cdr[temp],
-                    world_gc_type_name[cdr[temp] % 4],
-                    (expr in marks) ? "Yes" : "No")
-        }
-        if (expr in properties)
-            printf(" Prop")
+                    world_gc_type_name[cdr[temp] % 4])
+        else
+            printf("%54s", "")
+        printf(" %-3s", (expr in marks) ? "Yes" : "No")
         print ""
     }
     print ""
