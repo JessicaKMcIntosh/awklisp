@@ -2,12 +2,7 @@
     "files.associations": {
         "*.lsp": "scheme",
         "*.scm": "scheme",
-        "startup": "scheme",
-        "lists": "scheme",
-        "numbers": "scheme",
         "awklisp": "awk",
-        "old-awklisp": "awk",
-        "trace": "scheme",
         "Manual": "text", // Stop the markdown plugin from complaining.
         "THANKS": "text", // Stop the markdown plugin from complaining.
     },

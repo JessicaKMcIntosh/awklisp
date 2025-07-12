@@ -7,7 +7,7 @@
 # Don't forget to add your module to "Modules/all.awk" so it will be loaded.
 
 # Usage:
-# gawk -p -f Modules\type.awk -f awklisp startup -
+# gawk -p -f Modules\type.awk -f awklisp startup.scm -
 
 # (get_type 11)   => Number
 # (get_type '(t)) => Pair

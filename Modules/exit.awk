@@ -2,7 +2,7 @@
 # Modules MUST be loaded before awklisp.
 
 # Usage:
-# gawk -p -f Modules\exit.awk -f awklisp startup -
+# gawk -p -f Modules\exit.awk -f awklisp startup.scm -
 
 # (exit 0) => Exits with return code 0.
 # (exit 1) => Exits with return code 1.

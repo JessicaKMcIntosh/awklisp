@@ -5,7 +5,7 @@
 # Include this file on the command line: -f Extras\world_objects.awk
 
 # Example:
-# gawk -f awklisp -f Extras\world_objects.awk startup
+# gawk -f awklisp -f Extras\world_objects.awk startup.scm
 
 END {
     # Prepare the ordinal table for character conversions.

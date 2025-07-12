@@ -1,7 +1,8 @@
 ; Tail-recursive Scheme interpreter
-; Uses: startup scmhelp.lsp
+; Uses: startup.scm scmhelp.scm
 ; Based on Abelson & Sussman, chapter 5.
 ; The most glaring omissions are error-checking, set!, begin, and call/cc.
+(load "scmhelp.scm")
 
 (define next '*)
 

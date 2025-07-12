@@ -1,5 +1,5 @@
-; Stuff common to scheme.lsp and tail.lsp.
-(load "startup")
+; Stuff common to scheme.scm and tail.scm
+(load "startup.scm")
 
 ; Environment operations
 

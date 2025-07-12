@@ -11,7 +11,7 @@
 # Unmarked   | -v gc_unmarked=1
 
 # Example:
-# gawk -f awklisp -f Extras\world_gc.awk startup
+# gawk -f awklisp -f Extras\world_gc.awk startup.scm
 
 END {
     # Take from Modules/type.awk for displaying types.

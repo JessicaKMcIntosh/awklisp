@@ -1,6 +1,6 @@
 ; Simple Eliza program -- see Norvig, _Paradigms of AI Programming_.
-; Uses: startup lists
-(load "lists")
+; Uses: startup.scm lists.scm
+(load "lists.scm")
 
 (define rule-pattern car)
 (define rule-answers cdr)

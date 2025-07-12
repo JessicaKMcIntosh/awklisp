@@ -1,7 +1,7 @@
 ;** allow primitives
 ; Procedure call/return tracing
-; Uses: startup
-(load "startup")
+; Uses: startup.scm
+(load "startup.scm")
 
 (define trace
   (lambda (var)

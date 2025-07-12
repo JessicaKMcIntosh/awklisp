@@ -1,6 +1,6 @@
 ; List-processing procedures
-; Uses: startup
-(load "startup")
+; Uses: startup.scm
+(load "startup.scm")
 
 (define reverse
   (lambda (L) (revappend L '())))

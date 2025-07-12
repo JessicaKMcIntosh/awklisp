@@ -58,7 +58,7 @@ SET ObjectsEnabled=no
 REM Reduce AWK Lisp output.
 SET QuietEnabled=no
 
-REM Load the file startup.
+REM Load the file startup.scm.
 SET StartupEnabled=no
 
 REM The command to execute AWK Lisp.
@@ -225,9 +225,9 @@ REM Build the Gawk command to run AWK Lisp
     REM Add the AWK Lisp program.
     SET GawkCmd=%GawkCmd% -f %AWKLispFile%
 
-    REM Load the file startup.
+    REM Load the file startup.scm.
     IF %StartupEnabled% == yes (
-        SET GawkCmd=%GawkCmd% startup
+        SET GawkCmd=%GawkCmd% startup.scm
     )
 
     REM Finally add any command line options.
@@ -274,7 +274,7 @@ REM Show some help text.
     ECHO /n or -n - Non-Interactive mode.
     ECHO /o or -o - Display all objects after exit.
     ECHO /q or -q - Quite, reduced output from AWK Lisp.
-    ECHO /s or -s - Load the file "startup".
+    ECHO /s or -s - Load the file "startup.scm".
     ECHO.
     ECHO (Case of options does not matter.)
     GOTO :ExitScript

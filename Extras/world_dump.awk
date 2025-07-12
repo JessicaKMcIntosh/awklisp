@@ -18,7 +18,7 @@
 # Values     | -v dump_values=1
 
 # For example, do dump everything:
-# gawk -f awklisp -f Extras\world_dump.awk -v dump_all=1 startup
+# gawk -f awklisp -f Extras\world_dump.awk -v dump_all=1 startup.scm
 
 
 END {

@@ -1,6 +1,6 @@
 ; This ain't a Scheme interpreter, despite the filename.
-; Uses: startup scmhelp.lsp
-(load "scmhelp.lsp")
+; Uses: startup scmhelp.scm
+(load "scmhelp.scm")
 
 (define read-eval-print-loop
   (lambda ()

@@ -6,7 +6,7 @@
         (+ (fib (- n 1))
            (fib (- n 2))))))
 
-; Taken from "startup".
+; Taken from "startup.scm".
 (define for-each
   (lambda (proc lst)
     (while lst

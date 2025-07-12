@@ -10,9 +10,9 @@ I have some other ideas as well.
   Can't tell if something is an improvement if you can't measure it.
 * Add a string data type and string routines. - Mostly done. Need more functions.
 * C style for loops would be an interesting addition.
-  startup has a for-each loop.
+  startup.scm has a for-each loop.
 * More math primitives.
-* ~~Include other files. So startup and other libraries could be loaded on demand.~~ - This is done. `(source "file_name.scm")`
+* ~~Include other files. So startup.scm and other libraries could be loaded on demand.~~ - This is done. `(source "file_name.scm")`
 * Adding break and continue for loops would be an interesting challenge.
 
 ## COPYRIGHT

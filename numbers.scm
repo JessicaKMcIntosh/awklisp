@@ -1,6 +1,6 @@
 ; Numeric procedures
-; Uses: startup
-(load "startup")
+; Uses: startup.scm
+(load "startup.scm")
 
 (define > (lambda (n1 n2) (< n2 n1)))
 (define <= (lambda (n1 n2) (not (< n2 n1))))
